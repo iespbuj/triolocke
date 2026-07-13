@@ -81,6 +81,7 @@ header::before{
 nav{
   display:flex; justify-content:center; gap: 6px;
   margin-top: 20px;
+  flex-wrap: wrap;
 }
 .nav-btn{
   background: transparent;
@@ -292,6 +293,19 @@ button.ghost:hover{ color:var(--silver-bright); border-color: var(--accent-dim);
 .history-item .h-time{ color: var(--silver-dim); font-size:11px; white-space:nowrap; }
 .empty-state{ text-align:center; color: var(--silver-dim); margin-top: 40px; font-size:14px; }
 
+/* ---------- Normas ---------- */
+.normas-list{ max-width: 640px; margin: 20px auto 0; display:flex; flex-direction:column; gap: 10px; }
+.norma-item{
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 13px;
+  display:flex; flex-direction:column; gap: 8px;
+}
+.norma-item .n-text{ color: var(--silver-bright); white-space: pre-wrap; line-height: 1.5; }
+.norma-item .n-meta{ color: var(--silver-dim); font-size: 11px; letter-spacing:.5px; text-align:right; }
+
 /* ---------- Trade ---------- */
 .trade-header{ display:flex; justify-content:center; margin: 18px 0 26px; }
 .offer-card{
@@ -347,7 +361,12 @@ button.ghost:hover{ color:var(--silver-bright); border-color: var(--accent-dim);
   width:100%; background: var(--panel); border:1px solid var(--border); border-radius:8px;
   padding: 10px 12px; color: var(--silver-bright); font-family:'Inter', sans-serif; font-size: 14px;
 }
-.field input:focus, .field select:focus{ outline:none; border-color: var(--accent-dim); }
+.field textarea{
+  width:100%; background: var(--panel); border:1px solid var(--border); border-radius:8px;
+  padding: 10px 12px; color: var(--silver-bright); font-family:'Inter', sans-serif; font-size: 14px;
+  min-height: 90px; resize: vertical; font-family:'Inter', sans-serif;
+}
+.field input:focus, .field select:focus, .field textarea:focus{ outline:none; border-color: var(--accent-dim); }
 .modal-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top: 18px; }
 .err-msg{ color: var(--danger); font-size: 12px; margin-top: 6px; min-height: 14px; }
 
@@ -490,6 +509,7 @@ footer{
     <button class="nav-btn" data-nav="history" onclick="go('history')">Historial</button>
     <button class="nav-btn" data-nav="trade" onclick="go('trade')">Trade</button>
     <button class="nav-btn" data-nav="duel" onclick="go('duel')">Temporizador</button>
+    <button class="nav-btn" data-nav="normas" onclick="go('normas')">Normas</button>
   </nav>
 </header>
 
@@ -504,6 +524,7 @@ const TRAINERS = ['iker','joel','alex'];
 const NAMES = { iker:'Iker', joel:'Joel', alex:'Alex' };
 
 let hearts = {}, teams = {}, history = [], tradesActive = [], tradesHistory = [];
+let normas = [];
 let duelState = { scheduled:null, picks:[], bye:null, match1:null, match1Winner:null, finalWinner:null };
 let duelHistory = [];
 let duelSpinning = false;
@@ -578,12 +599,13 @@ async function storeSet(key, val){
 }
 
 async function loadAll(){
-  const [profileResults, historyResult, tradesResult, duelResult, duelHistoryResult] = await Promise.all([
+  const [profileResults, historyResult, tradesResult, duelResult, duelHistoryResult, normasResult] = await Promise.all([
     Promise.all(TRAINERS.map(t => storeGet('profile:'+t, {hearts:20, team:[]}))),
     storeGet('history', []),
     storeGet('trades', {active:[], history:[]}),
     storeGet('duel', { scheduled:null, picks:[], bye:null, match1:null, match1Winner:null, finalWinner:null }),
-    storeGet('duelHistory', [])
+    storeGet('duelHistory', []),
+    storeGet('normas', [])
   ]);
   TRAINERS.forEach((t, i) => {
     hearts[t] = profileResults[i].hearts;
@@ -594,6 +616,7 @@ async function loadAll(){
   tradesHistory = tradesResult.history;
   duelState = duelResult;
   duelHistory = duelHistoryResult;
+  normas = normasResult;
   loaded = true;
 }
 async function saveProfile(t){
@@ -607,6 +630,9 @@ async function saveDuelState(){
 }
 async function saveDuelHistory(){
   return await storeSet('duelHistory', duelHistory);
+}
+async function saveNormas(){
+  return await storeSet('normas', normas);
 }
 
 function fmtTime(ts){
@@ -693,6 +719,7 @@ function render(){
   if(view === 'history') return renderHistory(app);
   if(view === 'trade') return renderTrade(app);
   if(view === 'duel') return renderDuel(app);
+  if(view === 'normas') return renderNormas(app);
 }
 
 function renderHome(app){
@@ -774,6 +801,24 @@ function renderHistory(app){
           <span class="h-time mono">${fmtTime(e.ts)}</span>
         </div>`).join('')}
     </div>
+  `;
+}
+
+function renderNormas(app){
+  app.innerHTML = `
+    <div class="trade-header">
+      <button class="primary" onclick="openAddNorma()">+ Añadir norma</button>
+    </div>
+    <div class="section-label">Normas del Triolocke</div>
+    ${normas.length===0 ? '<div class="empty-state">Todavía no hay normas escritas.</div>' : `
+    <div class="normas-list">
+      ${normas.map(n=>`
+        <div class="norma-item">
+          <div class="n-text">${n.text}</div>
+          <div class="n-meta mono">${NAMES[n.trainer]} · ${fmtTime(n.ts)}</div>
+        </div>
+      `).join('')}
+    </div>`}
   `;
 }
 
@@ -1253,6 +1298,41 @@ async function submitAddPoke(t){
     err.textContent = 'No se encontró ese Pokémon. Prueba con el nombre en inglés (ej: "totodile").';
     btn.textContent = 'Añadir'; btn.disabled = false;
   }
+}
+
+function openAddNorma(){
+  openModal(`
+    <h3>Añadir norma</h3>
+    <div class="field">
+      <label>¿Quién la escribe?</label>
+      <select id="norma-trainer">
+        ${TRAINERS.map(t=>`<option value="${t}">${NAMES[t]}</option>`).join('')}
+      </select>
+    </div>
+    <div class="field">
+      <label>Norma</label>
+      <textarea id="norma-text" placeholder="ej: no se pueden usar objetos curativos en combate"></textarea>
+    </div>
+    <div class="err-msg" id="norma-err"></div>
+    <div class="modal-actions">
+      <button class="ghost" onclick="closeModal()">Cancelar</button>
+      <button class="primary" id="norma-submit" onclick="submitNorma()">Añadir</button>
+    </div>
+  `);
+}
+async function submitNorma(){
+  const trainer = document.getElementById('norma-trainer').value;
+  const text = document.getElementById('norma-text').value.trim();
+  const err = document.getElementById('norma-err');
+  const btn = document.getElementById('norma-submit');
+  if(!text){ err.textContent = 'Escribe la norma.'; return; }
+  btn.disabled = true;
+  normas.unshift({ id: crypto.randomUUID(), trainer, text, ts: Date.now() });
+  pushHistory(`📜 ${NAMES[trainer]} añadió una norma nueva`);
+  closeModal();
+  render();
+  const ok = await saveNormas();
+  if(!ok) queueRetry('normas', saveNormas);
 }
 
 function openNewOffer(){
