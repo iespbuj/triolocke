@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Triolocke · SoulSilver</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap');
+
+:root{
+  --bg: #0b0d13;
+  --bg-elev: #12151e;
+  --panel: #191d29;
+  --panel-2: #1f2433;
+  --border: #2a2f40;
+  --silver: #c9cfdd;
+  --silver-dim: #7d8497;
+  --silver-bright: #f1f3f8;
+  --accent: #9fb2da;
+  --accent-dim: #556488;
+  --danger: #d1495b;
+  --danger-dim: #7a3138;
+  --gold: #c9a86a;
+}
+
+*{ box-sizing: border-box; }
+html,body{ margin:0; padding:0; }
+
+body{
+  background: radial-gradient(ellipse at 50% -10%, #1b2033 0%, var(--bg) 55%);
+  color: var(--silver);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+::selection{ background: var(--accent-dim); color: var(--silver-bright); }
+
+.mono{ font-family: 'JetBrains Mono', monospace; }
+
+/* ---------- Header ---------- */
+header{
+  padding: 28px 20px 18px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+header::before{
+  content:"";
+  position:absolute; top:-120px; left:50%; transform:translateX(-50%);
+  width: 480px; height: 240px;
+  background: radial-gradient(circle, rgba(159,178,218,0.16) 0%, rgba(159,178,218,0) 70%);
+  pointer-events:none;
+}
+.logo{
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 30px;
+  letter-spacing: 6px;
+  margin: 0;
+  background: linear-gradient(100deg, var(--silver-dim) 0%, var(--silver-bright) 25%, var(--accent) 45%, var(--silver-bright) 65%, var(--silver-dim) 100%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 7s linear infinite;
+  cursor: pointer;
+}
+@keyframes shimmer{
+  0%{ background-position: 200% 0; }
+  100%{ background-position: -50% 0; }
+}
+.subtitle{
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: var(--silver-dim);
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+nav{
+  display:flex; justify-content:center; gap: 6px;
+  margin-top: 20px;
+}
+.nav-btn{
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--silver-dim);
+  font-family: 'Rajdhani', sans-serif;
+  font-weight:600;
+  letter-spacing: 1.5px;
+  font-size: 13px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  cursor:pointer;
+  transition: all .15s ease;
+}
+.nav-btn:hover{ color: var(--silver-bright); border-color: var(--accent-dim); }
+.nav-btn.active{ background: var(--panel-2); color: var(--silver-bright); border-color: var(--accent); }
+
+main{ max-width: 1000px; margin: 0 auto; padding: 20px; }
+
+/* ---------- Podium (home) ---------- */
+.podium{
+  display:flex; align-items:flex-end; justify-content:center;
+  gap: 18px; margin-top: 30px; flex-wrap: wrap;
+}
+.profile-card{
+  background: linear-gradient(160deg, var(--panel) 0%, var(--bg-elev) 100%);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 220px;
+  padding: 22px 18px 20px;
+  text-align:center;
+  cursor:pointer;
+  position:relative;
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.profile-card:hover{
+  transform: translateY(-4px);
+  border-color: var(--accent-dim);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+}
+.profile-card.rank-1{ order:2; padding-top: 30px; padding-bottom: 28px; border-color: var(--accent-dim); }
+.profile-card.rank-2{ order:1; opacity: .96; }
+.profile-card.rank-3{ order:3; opacity: .92; }
+
+.rank-badge{
+  position:absolute; top:-14px; left:50%; transform:translateX(-50%);
+  width: 28px; height:28px; border-radius:50%;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Rajdhani', sans-serif; font-weight:700; font-size:13px;
+  color: var(--silver-dim);
+}
+.rank-1 .rank-badge{ color: var(--gold); border-color: var(--gold); }
+
+.trainer-name{
+  font-family:'Rajdhani', sans-serif;
+  font-size: 20px; font-weight:700; letter-spacing:1px;
+  color: var(--silver-bright);
+  margin: 6px 0 2px;
+}
+.hearts-count{
+  font-size: 34px; font-weight:600;
+  margin: 6px 0 0;
+}
+.hearts-count.danger{ color: var(--danger); }
+.hearts-count small{ font-size: 15px; color: var(--silver-dim); font-weight:400; }
+
+.mini-team{
+  display:flex; justify-content:center; gap: 5px; margin-top: 14px; flex-wrap:wrap;
+}
+.mini-slot{
+  width: 26px; height:26px; border-radius:50%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  overflow:hidden;
+}
+.mini-slot img{ width:100%; height:100%; object-fit: cover; }
+
+.team-count{
+  margin-top: 10px; font-size: 11px; color: var(--silver-dim); letter-spacing: 1px;
+}
+
+/* ---------- Profile view ---------- */
+.back-btn{
+  background:none; border:none; color: var(--silver-dim);
+  font-family:'Rajdhani', sans-serif; font-size:14px; letter-spacing:1px;
+  cursor:pointer; padding: 4px 0; margin-bottom: 10px;
+}
+.back-btn:hover{ color: var(--silver-bright); }
+
+.profile-header{
+  text-align:center; margin-bottom: 24px;
+}
+.profile-header h2{
+  font-family:'Rajdhani', sans-serif; font-size: 32px; letter-spacing:2px;
+  color: var(--silver-bright); margin: 0;
+}
+
+.hearts-panel{
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  text-align:center;
+  margin-bottom: 26px;
+}
+.big-count{
+  font-family:'JetBrains Mono', monospace;
+  font-size: 46px; font-weight:600; color: var(--silver-bright);
+}
+.big-count.danger{ color: var(--danger); }
+.big-count span{ font-size: 20px; color: var(--silver-dim); }
+
+.hearts-grid{
+  display:flex; flex-wrap:wrap; justify-content:center;
+  gap: 6px; margin: 18px 0;
+  max-width: 420px; margin-left:auto; margin-right:auto;
+}
+.gem{
+  width: 16px; height:16px;
+  background: var(--accent);
+  clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+  transition: background .2s ease, opacity .2s ease;
+}
+.gem.empty{ background: var(--border); opacity: .5; }
+
+.action-row{ display:flex; gap: 10px; justify-content:center; margin-top: 16px; flex-wrap:wrap; }
+
+button.primary{
+  background: var(--panel-2);
+  border: 1px solid var(--accent-dim);
+  color: var(--silver-bright);
+  font-family:'Rajdhani', sans-serif; font-weight:600; letter-spacing:1px;
+  padding: 10px 20px; border-radius: 10px; cursor:pointer; font-size:14px;
+  transition: all .15s ease;
+}
+button.primary:hover{ border-color: var(--accent); background:#242a3b; }
+button.danger-outline{
+  background:transparent; border:1px solid var(--danger-dim); color: var(--danger);
+  font-family:'Rajdhani', sans-serif; font-weight:600; letter-spacing:1px;
+  padding:10px 20px; border-radius:10px; cursor:pointer; font-size:14px;
+}
+button.danger-outline:hover{ background: rgba(209,73,91,0.08); }
+button.ghost{
+  background:transparent; border:1px solid var(--border); color: var(--silver-dim);
+  font-family:'Rajdhani', sans-serif; font-weight:600; letter-spacing:1px;
+  padding:8px 14px; border-radius:8px; cursor:pointer; font-size:13px;
+}
+button.ghost:hover{ color:var(--silver-bright); border-color: var(--accent-dim); }
+
+.gem-break{
+  animation: breakGem .35s ease;
+}
+@keyframes breakGem{
+  0%{ transform: scale(1) rotate(0deg); }
+  40%{ transform: scale(1.4) rotate(10deg); opacity: .6; }
+  100%{ transform: scale(1) rotate(0deg); opacity: .5; }
+}
+
+/* ---------- Team ---------- */
+.section-label{
+  font-family:'Rajdhani', sans-serif; letter-spacing:2px; text-transform:uppercase;
+  color: var(--silver-dim); font-size:13px; margin: 24px 0 12px; text-align:center;
+}
+.team-grid{
+  display:grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  max-width: 560px; margin: 0 auto;
+}
+@media (max-width: 560px){ .team-grid{ grid-template-columns: repeat(2, 1fr); } }
+
+.poke-slot{
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 10px;
+  text-align:center;
+  position:relative;
+  min-height: 130px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+}
+.poke-slot img{ width:56px; height:56px; object-fit:contain; margin-bottom:6px; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4)); }
+.poke-nick{ font-family:'Rajdhani', sans-serif; font-weight:700; color: var(--silver-bright); font-size:15px; }
+.poke-species{ font-size: 11px; color: var(--silver-dim); text-transform: capitalize; margin-top:1px; }
+.poke-remove{
+  position:absolute; top:6px; right:8px;
+  background:none; border:none; color: var(--silver-dim);
+  cursor:pointer; font-size: 14px; line-height:1;
+}
+.poke-remove:hover{ color: var(--danger); }
+
+.poke-slot.empty{
+  border-style: dashed; cursor:pointer; color: var(--silver-dim);
+  font-family:'Rajdhani', sans-serif; font-size: 13px; letter-spacing:1px;
+}
+.poke-slot.empty:hover{ border-color: var(--accent-dim); color: var(--silver-bright); }
+
+/* ---------- History ---------- */
+.history-list{ max-width: 640px; margin: 20px auto 0; display:flex; flex-direction:column; gap: 8px; }
+.history-item{
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 13px;
+  display:flex; justify-content:space-between; align-items:center; gap: 10px;
+}
+.history-item .h-text{ color: var(--silver); }
+.history-item .h-time{ color: var(--silver-dim); font-size:11px; white-space:nowrap; }
+.empty-state{ text-align:center; color: var(--silver-dim); margin-top: 40px; font-size:14px; }
+
+/* ---------- Trade ---------- */
+.trade-header{ display:flex; justify-content:center; margin: 18px 0 26px; }
+.offer-card{
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 18px;
+  max-width: 640px; margin: 0 auto 16px;
+}
+.offer-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.offer-trainer{ font-family:'Rajdhani', sans-serif; font-weight:700; color: var(--silver-bright); font-size:16px; }
+.offer-time{ font-size: 11px; color: var(--silver-dim); }
+.chip-row{ display:flex; flex-wrap:wrap; gap: 8px; }
+.chip{
+  display:flex; align-items:center; gap: 6px;
+  background: var(--bg-elev); border:1px solid var(--border); border-radius: 999px;
+  padding: 4px 10px 4px 4px; font-size: 12px;
+}
+.chip img{ width: 20px; height:20px; object-fit:contain; }
+.chip span{ text-transform:capitalize; }
+.counters{ margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
+.counter-item{ margin-bottom: 10px; }
+.counter-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.counter-name{ font-size:13px; color: var(--silver); font-family:'Rajdhani', sans-serif; font-weight:600; }
+.offer-actions{ display:flex; gap:8px; margin-top: 10px; flex-wrap:wrap; }
+
+.section-sub{
+  font-family:'Rajdhani', sans-serif; letter-spacing:2px; text-transform:uppercase;
+  color: var(--silver-dim); font-size: 13px; text-align:center; margin: 32px 0 14px;
+}
+
+/* ---------- Modal ---------- */
+.modal-overlay{
+  position:fixed; inset:0; background: rgba(6,7,11,0.72);
+  display:flex; align-items:center; justify-content:center; z-index: 100;
+  padding: 20px;
+}
+.modal{
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 26px;
+  width: 100%; max-width: 420px;
+  max-height: 85vh; overflow-y:auto;
+}
+.modal h3{
+  font-family:'Rajdhani', sans-serif; letter-spacing:1px; color: var(--silver-bright);
+  margin: 0 0 16px; font-size: 20px;
+}
+.field{ margin-bottom: 14px; }
+.field label{ display:block; font-size: 12px; color: var(--silver-dim); margin-bottom:6px; letter-spacing:0.5px; }
+.field input, .field select{
+  width:100%; background: var(--panel); border:1px solid var(--border); border-radius:8px;
+  padding: 10px 12px; color: var(--silver-bright); font-family:'Inter', sans-serif; font-size: 14px;
+}
+.field input:focus, .field select:focus{ outline:none; border-color: var(--accent-dim); }
+.modal-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top: 18px; }
+.err-msg{ color: var(--danger); font-size: 12px; margin-top: 6px; min-height: 14px; }
+
+.item-row-add{ display:flex; gap:8px; align-items:flex-end; margin-bottom: 12px; }
+.item-row-add .field{ margin-bottom:0; flex:1; }
+.pending-chips{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom: 14px; }
+
+.autocomplete-wrap{ position: relative; }
+.autocomplete-list{
+  position:absolute; top: calc(100% + 4px); left:0; right:0;
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px;
+  max-height: 180px; overflow-y:auto; z-index: 20;
+  display:none;
+}
+.autocomplete-list.show{ display:block; }
+.autocomplete-item{
+  padding: 8px 12px; font-size: 13px; cursor:pointer; text-transform:capitalize; color: var(--silver);
+}
+.autocomplete-item:hover{ background: var(--bg-elev); color: var(--silver-bright); }
+
+.loading-dot{ display:inline-block; }
+
+/* ---------- Duelo / Temporizador ---------- */
+.duel-empty{
+  text-align:center; padding: 60px 20px;
+}
+.duel-empty p{ color: var(--silver-dim); margin-bottom: 22px; font-size: 14px; }
+
+.duel-card{
+  background: linear-gradient(160deg, var(--panel) 0%, var(--bg-elev) 100%);
+  border: 1px solid var(--border); border-radius: 18px;
+  padding: 30px 20px; text-align:center; margin-bottom: 28px;
+}
+.duel-name{
+  font-family:'Rajdhani', sans-serif; font-size: 22px; letter-spacing:1.5px;
+  color: var(--silver-bright); margin-bottom: 4px;
+}
+.duel-date{ font-size: 12px; color: var(--silver-dim); letter-spacing:.5px; margin-bottom: 20px; }
+.countdown{
+  display:flex; justify-content:center; gap: 14px; flex-wrap:wrap;
+}
+.countdown .unit{ min-width: 64px; }
+.countdown .num{
+  font-family:'JetBrains Mono', monospace; font-size: 34px; font-weight:600;
+  color: var(--silver-bright); background: var(--bg); border:1px solid var(--border);
+  border-radius: 12px; padding: 10px 4px; display:block;
+}
+.countdown .lbl{ font-size: 10px; letter-spacing:1.5px; color: var(--silver-dim); margin-top:6px; display:block; text-transform:uppercase; }
+.countdown.due .num{ color: var(--gold); border-color: var(--gold); }
+
+.duel-top-actions{ display:flex; justify-content:center; gap:10px; margin-top:20px; flex-wrap:wrap; }
+
+/* Wheel */
+.wheel-wrap{
+  display:flex; flex-direction:column; align-items:center; margin: 10px 0 30px;
+}
+.wheel-outer{
+  position:relative; width: 220px; height: 220px; margin-bottom: 18px;
+}
+.wheel-pointer{
+  position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+  width:0; height:0; z-index:5;
+  border-left: 10px solid transparent; border-right: 10px solid transparent;
+  border-top: 18px solid var(--gold);
+}
+.wheel{
+  width:100%; height:100%; border-radius:50%;
+  border: 3px solid var(--border);
+  position:relative; overflow:hidden;
+  transition: transform 4.2s cubic-bezier(0.15, 0.85, 0.25, 1);
+  box-shadow: 0 0 0 6px var(--bg-elev), 0 10px 30px rgba(0,0,0,0.4);
+  background: var(--panel-2);
+}
+.wheel-seg{
+  position:absolute; inset:0;
+  transform-origin: 50% 50%;
+}
+.wheel-seg span{
+  position:absolute; top: 18px; left:50%;
+  font-family:'Rajdhani', sans-serif; font-weight:700; font-size: 14px;
+  letter-spacing:1px; color: var(--bg);
+  white-space:nowrap;
+}
+.wheel-center{
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:34px; height:34px; border-radius:50%;
+  background: var(--bg-elev); border:2px solid var(--gold); z-index:4;
+}
+
+/* Bracket */
+.bracket{
+  display:flex; flex-direction:column; align-items:center; gap: 16px; margin: 10px 0 20px;
+}
+.bracket-match{
+  background: var(--panel); border:1px solid var(--border); border-radius: 14px;
+  padding: 16px 18px; width: 100%; max-width: 360px;
+}
+.bracket-match .match-label{
+  font-size: 11px; letter-spacing:1.5px; color: var(--silver-dim); text-transform:uppercase;
+  text-align:center; margin-bottom: 10px;
+}
+.bracket-vs{ display:flex; align-items:center; justify-content:center; gap: 14px; }
+.bracket-player{
+  flex:1; text-align:center; padding: 10px 8px; border-radius: 10px;
+  border: 1px solid var(--border); cursor:pointer; transition: all .15s ease;
+  font-family:'Rajdhani', sans-serif; font-weight:600; letter-spacing:.5px; color: var(--silver);
+}
+.bracket-player:hover{ border-color: var(--accent); color: var(--silver-bright); }
+.bracket-player.winner{ border-color: var(--gold); color: var(--gold); background: rgba(201,168,106,0.08); }
+.bracket-player.locked{ cursor:default; }
+.bracket-vs-sep{ font-size: 11px; color: var(--silver-dim); }
+.bracket-bye{ font-size: 11px; color: var(--silver-dim); text-align:center; margin-top:8px; }
+.spin-note{ font-size: 12px; color: var(--silver-dim); text-align:center; margin-bottom: 14px; }
+
+.duel-tally{ display:flex; justify-content:center; gap: 20px; margin: 4px 0 30px; flex-wrap:wrap; }
+.duel-tally .t-item{ text-align:center; }
+.duel-tally .t-name{ font-size: 12px; color: var(--silver-dim); letter-spacing:.5px; }
+.duel-tally .t-wins{ font-family:'JetBrains Mono', monospace; font-size: 22px; color: var(--silver-bright); }
+
+.duel-history-item{
+  background: var(--panel); border:1px solid var(--border); border-radius: 12px;
+  padding: 12px 16px; margin-bottom: 10px; font-size: 13px;
+}
+.duel-history-item .dh-name{ color: var(--silver-bright); font-weight:600; }
+.duel-history-item .dh-date{ color: var(--silver-dim); font-size: 11px; margin-bottom:4px; }
+.duel-history-item .dh-champ{ color: var(--gold); }
+
+footer{
+  text-align:center; color: var(--silver-dim); font-size: 11px; letter-spacing:1px; margin-top: 50px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1 class="logo" onclick="go('home')">TRIOLOCKE</h1>
+  <div class="subtitle">Pokémon SoulSilver · Iker · Joel · Alex</div>
+  <nav>
+    <button class="nav-btn" data-nav="home" onclick="go('home')">Inicio</button>
+    <button class="nav-btn" data-nav="history" onclick="go('history')">Historial</button>
+    <button class="nav-btn" data-nav="trade" onclick="go('trade')">Trade</button>
+    <button class="nav-btn" data-nav="duel" onclick="go('duel')">Temporizador</button>
+  </nav>
+</header>
+
+<main id="app">
+  <div class="empty-state">Cargando…</div>
+</main>
+
+<footer>hecho para la run · datos compartidos entre los tres</footer>
+
+<script>
+const TRAINERS = ['iker','joel','alex'];
+const NAMES = { iker:'Iker', joel:'Joel', alex:'Alex' };
+
+let hearts = {}, teams = {}, history = [], tradesActive = [], tradesHistory = [];
+let duelState = { scheduled:null, picks:[], bye:null, match1:null, match1Winner:null, finalWinner:null };
+let duelHistory = [];
+let duelSpinning = false;
+let duelWheelRotation = 0;
+let duelCountdownInterval = null;
+let view = 'home';
+let currentTrainer = null;
+let loaded = false;
+
+let POKEMON_NAMES = [];
+let ITEM_NAMES = [];
+async function loadNameLists(){
+  try{
+    const r1 = await fetch('https://pokeapi.co/api/v2/pokemon?limit=20000');
+    const d1 = await r1.json();
+    POKEMON_NAMES = d1.results.map(p=>p.name);
+  }catch(e){ console.error('failed to load pokemon list', e); }
+  try{
+    const r2 = await fetch('https://pokeapi.co/api/v2/item?limit=3000');
+    const d2 = await r2.json();
+    ITEM_NAMES = d2.results.map(p=>p.name);
+  }catch(e){ console.error('failed to load item list', e); }
+}
+
+/* ---------------- Backend: Google Sheets via Apps Script ---------------- */
+const API_URL = 'https://script.google.com/macros/s/AKfycbyM5X3Kn-l0HpiCcA3jNsSx80-KnfCB8PJMqNVFzOKbjob4csjXNJhNDF0dIJ8RsRjf/exec';
+
+async function storeGet(key, def){
+  for(let attempt=0; attempt<2; attempt++){
+    try{
+      const res = await fetch(`${API_URL}?key=${encodeURIComponent(key)}`);
+      const text = await res.text();
+      if(text === 'null' || text === ''){
+        // no existe todavía en la hoja -> lo inicializamos con el valor por defecto
+        try{
+          await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // evita preflight CORS
+            body: JSON.stringify({ key, value: JSON.stringify(def) })
+          });
+        }catch(e2){}
+        return def;
+      }
+      return JSON.parse(text);
+    }catch(e){
+      if(attempt===1){
+        console.error('storeGet failed', key, e);
+        return def;
+      }
+      await new Promise(r=>setTimeout(r,300));
+    }
+  }
+  return def;
+}
+async function storeSet(key, val){
+  const delays = [200, 600, 1200, 2000];
+  for(let attempt=0; attempt<=delays.length; attempt++){
+    try{
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // evita preflight CORS
+        body: JSON.stringify({ key, value: JSON.stringify(val) })
+      });
+      const data = await res.json();
+      if(data && data.ok) return true;
+    }catch(e){
+      console.error('storeSet failed', key, attempt, e);
+    }
+    if(attempt < delays.length) await new Promise(r=>setTimeout(r, delays[attempt]));
+  }
+  return false;
+}
+
+async function loadAll(){
+  const [profileResults, historyResult, tradesResult, duelResult, duelHistoryResult] = await Promise.all([
+    Promise.all(TRAINERS.map(t => storeGet('profile:'+t, {hearts:20, team:[]}))),
+    storeGet('history', []),
+    storeGet('trades', {active:[], history:[]}),
+    storeGet('duel', { scheduled:null, picks:[], bye:null, match1:null, match1Winner:null, finalWinner:null }),
+    storeGet('duelHistory', [])
+  ]);
+  TRAINERS.forEach((t, i) => {
+    hearts[t] = profileResults[i].hearts;
+    teams[t] = profileResults[i].team;
+  });
+  history = historyResult;
+  tradesActive = tradesResult.active;
+  tradesHistory = tradesResult.history;
+  duelState = duelResult;
+  duelHistory = duelHistoryResult;
+  loaded = true;
+}
+async function saveProfile(t){
+  return await storeSet('profile:'+t, { hearts: hearts[t], team: teams[t] });
+}
+async function saveTrades(){
+  return await storeSet('trades', { active: tradesActive, history: tradesHistory });
+}
+async function saveDuelState(){
+  return await storeSet('duel', duelState);
+}
+async function saveDuelHistory(){
+  return await storeSet('duelHistory', duelHistory);
+}
+
+function fmtTime(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString('es-ES',{day:'2-digit',month:'short'}) + ' · ' + d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+}
+
+function toast(msg){
+  let el = document.getElementById('toast');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'toast';
+    el.style.cssText = 'position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1f2433;border:1px solid #2a2f40;color:#c9cfdd;padding:10px 18px;border-radius:999px;font-size:12px;font-family:Inter,sans-serif;z-index:200;opacity:0;transition:opacity .25s ease;';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.opacity = '1';
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>{ el.style.opacity = '0'; }, 3500);
+}
+
+/* ---------------- Pending-save safety net ---------------- */
+const pendingSaves = new Map(); // key -> retry function
+function updateSyncBadge(){
+  let el = document.getElementById('sync-badge');
+  if(pendingSaves.size === 0){
+    if(el) el.remove();
+    return;
+  }
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'sync-badge';
+    el.style.cssText = 'position:fixed;top:14px;right:14px;background:#3a1f24;border:1px solid #7a3138;color:#e8b3ba;padding:7px 14px;border-radius:999px;font-size:11px;font-family:Inter,sans-serif;z-index:200;letter-spacing:.5px;';
+    document.body.appendChild(el);
+  }
+  el.textContent = `⚠ sin guardar (${pendingSaves.size}) — no cierres la pestaña`;
+}
+function queueRetry(key, saveFn){
+  pendingSaves.set(key, saveFn);
+  updateSyncBadge();
+}
+async function flushPending(){
+  for(const [key, saveFn] of [...pendingSaves.entries()]){
+    const ok = await saveFn();
+    if(ok){ pendingSaves.delete(key); }
+  }
+  updateSyncBadge();
+}
+setInterval(flushPending, 4000);
+window.addEventListener('beforeunload', (e)=>{
+  if(pendingSaves.size > 0){
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+function pushHistory(text){
+  history.unshift({id: crypto.randomUUID(), text, ts: Date.now()});
+  history = history.slice(0, 300);
+  storeSet('history', history).then(ok=>{ if(!ok) queueRetry('history', ()=>storeSet('history', history)); });
+}
+
+function go(v, param){
+  view = v;
+  currentTrainer = param || null;
+  render();
+}
+
+function setActiveNav(){
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.nav === (view==='profile' ? '' : view));
+  });
+}
+
+/* ---------------- RENDER ---------------- */
+function render(){
+  setActiveNav();
+  if(duelCountdownInterval){ clearInterval(duelCountdownInterval); duelCountdownInterval = null; }
+  const app = document.getElementById('app');
+  if(!loaded){ app.innerHTML = '<div class="empty-state">Cargando…</div>'; return; }
+
+  if(view === 'home') return renderHome(app);
+  if(view === 'profile') return renderProfile(app, currentTrainer);
+  if(view === 'history') return renderHistory(app);
+  if(view === 'trade') return renderTrade(app);
+  if(view === 'duel') return renderDuel(app);
+}
+
+function renderHome(app){
+  const ranked = [...TRAINERS].sort((a,b)=> hearts[b]-hearts[a]);
+  const rankOf = {}; ranked.forEach((t,i)=> rankOf[t]=i+1);
+
+  app.innerHTML = `
+    <div class="podium">
+      ${TRAINERS.map(t=>{
+        const r = rankOf[t];
+        const h = hearts[t];
+        const teamCount = teams[t].length;
+        return `
+        <div class="profile-card rank-${r}" onclick="go('profile','${t}')">
+          <div class="rank-badge">${r}</div>
+          <div class="trainer-name">${NAMES[t]}</div>
+          <div class="hearts-count ${h<0?'danger':''}">${h}<small>/20</small></div>
+          <div class="mini-team">
+            ${Array.from({length:6}).map((_,i)=>{
+              const p = teams[t][i];
+              return `<div class="mini-slot">${p?`<img src="${p.sprite}" alt="">`:''}</div>`;
+            }).join('')}
+          </div>
+          <div class="team-count">${teamCount}/6 POKÉMON</div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+function renderProfile(app, t){
+  const h = hearts[t];
+  const gems = Array.from({length:20}).map((_,i)=> i < Math.max(h,0));
+  app.innerHTML = `
+    <button class="back-btn" onclick="go('home')">← volver</button>
+    <div class="profile-header"><h2>${NAMES[t]}</h2></div>
+
+    <div class="hearts-panel">
+      <div class="big-count ${h<0?'danger':''}">${h}<span> / 20 vidas</span></div>
+      <div class="hearts-grid" id="gems-row">
+        ${gems.map(on=> `<div class="gem ${on?'':'empty'}"></div>`).join('')}
+      </div>
+      <div class="action-row">
+        <button class="danger-outline" onclick="loseLife('${t}')">💔 Perder vida</button>
+        <button class="ghost" onclick="resetLives('${t}')">🔄 Restablecer</button>
+      </div>
+    </div>
+
+    <div class="section-label">Equipo principal</div>
+    <div class="team-grid">
+      ${Array.from({length:6}).map((_,i)=>{
+        const p = teams[t][i];
+        if(p){
+          return `
+          <div class="poke-slot">
+            <button class="poke-remove" onclick="removePoke('${t}','${p.id}')">✕</button>
+            <img src="${p.sprite}" alt="${p.species}">
+            <div class="poke-nick">${p.nickname}</div>
+            <div class="poke-species">${p.species.replace(/-/g,' ')}</div>
+          </div>`;
+        }
+        return `<div class="poke-slot empty" onclick="openAddPoke('${t}')">+ Añadir<br>Pokémon</div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+function renderHistory(app){
+  if(history.length === 0){
+    app.innerHTML = '<div class="empty-state">Aún no hay nada en el historial.</div>';
+    return;
+  }
+  app.innerHTML = `
+    <div class="section-label">Historial</div>
+    <div class="history-list">
+      ${history.map(e=> `
+        <div class="history-item">
+          <span class="h-text">${e.text}</span>
+          <span class="h-time mono">${fmtTime(e.ts)}</span>
+        </div>`).join('')}
+    </div>
+  `;
+}
+
+function renderTrade(app){
+  app.innerHTML = `
+    <div class="trade-header">
+      <button class="primary" onclick="openNewOffer()">+ Nueva oferta</button>
+    </div>
+
+    <div class="section-label">Ofertas activas</div>
+    ${tradesActive.length===0 ? '<div class="empty-state">No hay ofertas activas.</div>' : tradesActive.map(o=>`
+      <div class="offer-card">
+        <div class="offer-top">
+          <div class="offer-trainer">${NAMES[o.trainer]} ofrece</div>
+          <div class="offer-time mono">${fmtTime(o.ts)}</div>
+        </div>
+        <div class="chip-row">
+          ${o.items.map(it=>`<div class="chip"><img src="${it.sprite}"><span>${it.name.replace(/-/g,' ')}</span></div>`).join('')}
+        </div>
+        <div class="counters">
+          ${o.counters.length===0 ? `<div style="font-size:12px;color:var(--silver-dim)">Sin contraofertas todavía.</div>` : o.counters.map(c=>`
+            <div class="counter-item">
+              <div class="counter-top">
+                <span class="counter-name">${NAMES[c.trainer]} ofrece a cambio</span>
+                <button class="ghost" onclick="acceptTrade('${o.id}','${c.id}')">Aceptar</button>
+              </div>
+              <div class="chip-row">
+                ${c.items.map(it=>`<div class="chip"><img src="${it.sprite}"><span>${it.name.replace(/-/g,' ')}</span></div>`).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="offer-actions">
+          <button class="ghost" onclick="openCounterOffer('${o.id}')">+ Ofrecer a cambio</button>
+          <button class="ghost" onclick="cancelOffer('${o.id}')">Cancelar oferta</button>
+        </div>
+      </div>
+    `).join('')}
+
+    <div class="section-sub">Historial de trades</div>
+    ${tradesHistory.length===0 ? '<div class="empty-state">Todavía no se ha cerrado ningún trade.</div>' : tradesHistory.map(rec=>`
+      <div class="offer-card">
+        <div class="offer-top">
+          <div class="offer-trainer">${NAMES[rec.offerTrainer]} ↔ ${NAMES[rec.counterTrainer]}</div>
+          <div class="offer-time mono">${fmtTime(rec.ts)}</div>
+        </div>
+        <div style="font-size:12px;color:var(--silver-dim);margin-bottom:6px;">${NAMES[rec.offerTrainer]} dio:</div>
+        <div class="chip-row">${rec.offerItems.map(it=>`<div class="chip"><img src="${it.sprite}"><span>${it.name.replace(/-/g,' ')}</span></div>`).join('')}</div>
+        <div style="font-size:12px;color:var(--silver-dim);margin:10px 0 6px;">${NAMES[rec.counterTrainer]} dio:</div>
+        <div class="chip-row">${rec.counterItems.map(it=>`<div class="chip"><img src="${it.sprite}"><span>${it.name.replace(/-/g,' ')}</span></div>`).join('')}</div>
+        <div class="offer-actions">
+          <button class="danger-outline" onclick="deleteTradeRecord('${rec.id}')">Eliminar (pagado)</button>
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+/* ---------------- DUELO / TEMPORIZADOR ---------------- */
+function toLocalInputValue(date){
+  const pad = n => String(n).padStart(2,'0');
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+function endOfWeek(){
+  const d = new Date();
+  const day = d.getDay(); // 0=domingo
+  const diffToSunday = day === 0 ? 0 : 7 - day;
+  const end = new Date(d.getFullYear(), d.getMonth(), d.getDate() + diffToSunday, 23, 59);
+  return end;
+}
+
+function renderDuel(app){
+  if(!duelState.scheduled){
+    app.innerHTML = `
+      <div class="duel-empty">
+        <p>No hay ningún combate programado esta semana.</p>
+        <button class="primary" onclick="openScheduleDuel()">＋ Temporizador</button>
+      </div>
+      ${renderDuelTallyAndHistory()}
+    `;
+    return;
+  }
+
+  const scheduled = duelState.scheduled;
+  app.innerHTML = `
+    <div class="duel-card">
+      <div class="duel-name">${scheduled.name}</div>
+      <div class="duel-date">${fmtTime(new Date(scheduled.datetime).getTime())}</div>
+      <div class="countdown" id="duel-countdown"></div>
+      <div class="duel-top-actions">
+        <button class="ghost" onclick="resetDuel()">Reiniciar</button>
+      </div>
+    </div>
+
+    ${renderWheelAndBracket()}
+    ${renderDuelTallyAndHistory()}
+  `;
+
+  updateDuelCountdown();
+  duelCountdownInterval = setInterval(updateDuelCountdown, 1000);
+
+  // Si ya se había girado antes de este render, coloca la rueda directamente en su posición final sin animar
+  const wheelEl = document.getElementById('duel-wheel');
+  if(wheelEl && !duelSpinning && (duelState.picks||[]).length > 0 && duelWheelRotation > 0){
+    wheelEl.style.transition = 'none';
+    wheelEl.style.transform = `rotate(${duelWheelRotation}deg)`;
+  }
+}
+
+function updateDuelCountdown(){
+  const el = document.getElementById('duel-countdown');
+  if(!el || !duelState.scheduled) return;
+  const target = new Date(duelState.scheduled.datetime).getTime();
+  const now = Date.now();
+  let diff = target - now;
+  if(diff <= 0){
+    el.classList.add('due');
+    el.innerHTML = `<div style="font-family:'Rajdhani',sans-serif;font-size:20px;letter-spacing:1.5px;color:var(--gold);">¡Es la hora del combate!</div>`;
+    return;
+  }
+  el.classList.remove('due');
+  const d = Math.floor(diff/(1000*60*60*24));
+  const h = Math.floor((diff/(1000*60*60))%24);
+  const m = Math.floor((diff/(1000*60))%60);
+  const s = Math.floor((diff/1000)%60);
+  el.innerHTML = `
+    <div class="unit"><span class="num">${d}</span><span class="lbl">días</span></div>
+    <div class="unit"><span class="num">${String(h).padStart(2,'0')}</span><span class="lbl">horas</span></div>
+    <div class="unit"><span class="num">${String(m).padStart(2,'0')}</span><span class="lbl">min</span></div>
+    <div class="unit"><span class="num">${String(s).padStart(2,'0')}</span><span class="lbl">seg</span></div>
+  `;
+}
+
+function wheelGradientAndSegs(candidates){
+  const colors = ['var(--accent)', 'var(--gold)', 'var(--silver)'];
+  const segAngle = 360 / candidates.length;
+  const stops = candidates.map((t,i)=> `${colors[i%colors.length]} ${i*segAngle}deg ${(i+1)*segAngle}deg`).join(', ');
+  const segs = candidates.map((t,i)=>{
+    const angle = i*segAngle + segAngle/2;
+    const norm = ((angle % 360) + 360) % 360;
+    const flip = norm > 90 && norm < 270; // evita texto boca abajo en la mitad inferior
+    return `
+      <div class="wheel-seg" style="transform: rotate(${angle}deg);">
+        <span style="transform: translateX(-50%) ${flip ? 'rotate(180deg)' : ''};">${NAMES[t]}</span>
+      </div>
+    `;
+  }).join('');
+  return { gradient: `conic-gradient(${stops})`, segs };
+}
+
+function renderWheelAndBracket(){
+  const picks = duelState.picks || [];
+
+  // Fase 1: todavía no se han decidido los dos jugadores del Combate 1
+  if(picks.length < 2){
+    const candidates = TRAINERS.filter(t=> !picks.includes(t));
+    const { gradient, segs } = wheelGradientAndSegs(candidates);
+    const pickLabel = picks.length === 0 ? 'jugador 1' : 'jugador 2';
+
+    return `
+      <div class="bracket">
+        <div class="bracket-match">
+          <div class="match-label">Combate 1 · sorteo</div>
+          <div class="bracket-vs">
+            <div class="bracket-player locked ${picks[0]?'winner':''}">${picks[0] ? NAMES[picks[0]] : '?'}</div>
+            <div class="bracket-vs-sep">VS</div>
+            <div class="bracket-player locked ${picks[1]?'winner':''}">${picks[1] ? NAMES[picks[1]] : '?'}</div>
+          </div>
+        </div>
+      </div>
+      <div class="wheel-wrap">
+        <div class="spin-note">Gira la rueda para decidir el ${pickLabel} del Combate 1</div>
+        <div class="wheel-outer">
+          <div class="wheel-pointer"></div>
+          <div class="wheel" id="duel-wheel" style="background:${gradient};">${segs}<div class="wheel-center"></div></div>
+        </div>
+        <button class="primary" onclick="spinWheel()" ${duelSpinning?'disabled':''}>${duelSpinning?'Girando…':'Girar la rueda'}</button>
+      </div>
+    `;
+  }
+
+  // Fase 2: ya sabemos quién juega el Combate 1 y quién pasa directo a la final
+  const { bye, match1, match1Winner, finalWinner } = duelState;
+  return `
+    <div class="bracket">
+      <div class="bracket-match">
+        <div class="match-label">Combate 1</div>
+        <div class="bracket-vs">
+          <div class="bracket-player ${match1Winner===match1.p1?'winner':''} ${match1Winner?'locked':''}" ${match1Winner?'':`onclick="setMatch1Winner('${match1.p1}')"`}>${NAMES[match1.p1]}</div>
+          <div class="bracket-vs-sep">VS</div>
+          <div class="bracket-player ${match1Winner===match1.p2?'winner':''} ${match1Winner?'locked':''}" ${match1Winner?'':`onclick="setMatch1Winner('${match1.p2}')"`}>${NAMES[match1.p2]}</div>
+        </div>
+        <div class="bracket-bye">${NAMES[bye]} pasa directo a la final</div>
+      </div>
+
+      ${match1Winner ? `
+      <div class="bracket-match">
+        <div class="match-label">Final</div>
+        <div class="bracket-vs">
+          <div class="bracket-player ${finalWinner===match1Winner?'winner':''} ${finalWinner?'locked':''}" ${finalWinner?'':`onclick="setFinalWinner('${match1Winner}')"`}>${NAMES[match1Winner]}</div>
+          <div class="bracket-vs-sep">VS</div>
+          <div class="bracket-player ${finalWinner===bye?'winner':''} ${finalWinner?'locked':''}" ${finalWinner?'':`onclick="setFinalWinner('${bye}')"`}>${NAMES[bye]}</div>
+        </div>
+      </div>` : ''}
+
+      ${finalWinner ? `
+      <div style="text-align:center;">
+        <div style="font-family:'Rajdhani',sans-serif;font-size:18px;color:var(--gold);letter-spacing:1px;margin-bottom:14px;">🏆 Campeón: ${NAMES[finalWinner]}</div>
+        <button class="primary" onclick="finishDuel()">Guardar resultado y preparar la próxima semana</button>
+      </div>` : ''}
+    </div>
+  `;
+}
+
+function renderDuelTallyAndHistory(){
+  const tally = {}; TRAINERS.forEach(t=> tally[t]=0);
+  duelHistory.forEach(d=>{ if(tally[d.champion] !== undefined) tally[d.champion]++; });
+
+  return `
+    <div class="section-sub" style="text-align:center;margin-bottom:14px;">Marcador</div>
+    <div class="duel-tally">
+      ${TRAINERS.map(t=>`
+        <div class="t-item">
+          <div class="t-wins">${tally[t]}</div>
+          <div class="t-name">${NAMES[t]}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="section-sub" style="text-align:center;margin-bottom:14px;">Historial de combates</div>
+    ${duelHistory.length===0 ? '<div class="empty-state">Todavía no se ha jugado ningún combate.</div>' : duelHistory.map(d=>`
+      <div class="duel-history-item">
+        <div class="dh-name">${d.name}</div>
+        <div class="dh-date">${fmtTime(new Date(d.date).getTime())}</div>
+        <div>${NAMES[d.match1.p1]} vs ${NAMES[d.match1.p2]} → ganó ${NAMES[d.match1.winner]} · Final: ${NAMES[d.final.p1]} vs ${NAMES[d.final.p2]} → <span class="dh-champ">campeón ${NAMES[d.champion]}</span></div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function openScheduleDuel(){
+  const now = new Date();
+  const minStr = toLocalInputValue(now);
+  const maxStr = toLocalInputValue(endOfWeek());
+  openModal(`
+    <h3>Nuevo Temporizador</h3>
+    <div class="field">
+      <label>Nombre del combate</label>
+      <input type="text" id="duel-name" placeholder="ej: Combate semana 3">
+    </div>
+    <div class="field">
+      <label>Fecha y hora (esta semana)</label>
+      <input type="datetime-local" id="duel-datetime" min="${minStr}" max="${maxStr}">
+    </div>
+    <div class="err-msg" id="duel-err"></div>
+    <div class="modal-actions">
+      <button class="ghost" onclick="closeModal()">Cancelar</button>
+      <button class="primary" onclick="submitScheduleDuel()">Programar</button>
+    </div>
+  `);
+}
+async function submitScheduleDuel(){
+  const name = document.getElementById('duel-name').value.trim();
+  const dt = document.getElementById('duel-datetime').value;
+  const err = document.getElementById('duel-err');
+  if(!name || !dt){ err.textContent = 'Rellena el nombre y la fecha.'; return; }
+  duelState = { scheduled: { name, datetime: dt }, bye:null, match1:null, match1Winner:null, finalWinner:null };
+  duelWheelRotation = 0;
+  closeModal();
+  render();
+  const ok = await saveDuelState();
+  if(!ok) queueRetry('duel', saveDuelState);
+}
+
+function resetDuel(){
+  if(!confirm('¿Reiniciar el temporizador y el combate actual? (no borra el historial de combates ya jugados)')) return;
+  duelState = { scheduled:null, picks:[], bye:null, match1:null, match1Winner:null, finalWinner:null };
+  duelWheelRotation = 0;
+  render();
+  saveDuelState().then(ok=>{ if(!ok) queueRetry('duel', saveDuelState); });
+}
+
+function spinWheel(){
+  if(duelSpinning) return;
+  const candidates = TRAINERS.filter(t=> !(duelState.picks||[]).includes(t));
+  if(candidates.length < 2) return; // ya está decidido
+  duelSpinning = true;
+  render();
+  const idx = Math.floor(Math.random()*candidates.length);
+  const segAngle = 360/candidates.length;
+  const center = idx*segAngle + segAngle/2;
+  const fullSpins = 5 + Math.floor(Math.random()*2);
+  const target = fullSpins*360 + (360 - center);
+  duelWheelRotation += target;
+  const wheelEl = document.getElementById('duel-wheel');
+  wheelEl.style.transition = 'transform 4.2s cubic-bezier(0.15, 0.85, 0.25, 1)';
+  // forzar reflow para que la transición se aplique
+  void wheelEl.offsetWidth;
+  wheelEl.style.transform = `rotate(${duelWheelRotation}deg)`;
+
+  setTimeout(async ()=>{
+    duelSpinning = false;
+    const picked = candidates[idx];
+    duelState.picks = [...(duelState.picks||[]), picked];
+    if(duelState.picks.length === 2){
+      const bye = TRAINERS.find(t=> !duelState.picks.includes(t));
+      duelState.bye = bye;
+      duelState.match1 = { p1: duelState.picks[0], p2: duelState.picks[1] };
+      duelState.match1Winner = null;
+      duelState.finalWinner = null;
+    }
+    render();
+    const ok = await saveDuelState();
+    if(!ok) queueRetry('duel', saveDuelState);
+  }, 4300);
+}
+
+async function setMatch1Winner(winner){
+  duelState.match1Winner = winner;
+  render();
+  const ok = await saveDuelState();
+  if(!ok) queueRetry('duel', saveDuelState);
+}
+async function setFinalWinner(winner){
+  duelState.finalWinner = winner;
+  render();
+  const ok = await saveDuelState();
+  if(!ok) queueRetry('duel', saveDuelState);
+}
+async function finishDuel(){
+  const { scheduled, bye, match1, match1Winner, finalWinner } = duelState;
+  duelHistory.unshift({
+    id: crypto.randomUUID(),
+    name: scheduled.name,
+    date: scheduled.datetime,
+    match1: { p1: match1.p1, p2: match1.p2, winner: match1Winner },
+    final: { p1: match1Winner, p2: bye, winner: finalWinner },
+    champion: finalWinner,
+    ts: Date.now()
+  });
+  duelState = { scheduled:null, picks:[], bye:null, match1:null, match1Winner:null, finalWinner:null };
+  duelWheelRotation = 0;
+  render();
+  const ok1 = await saveDuelHistory();
+  if(!ok1) queueRetry('duelHistory', saveDuelHistory);
+  const ok2 = await saveDuelState();
+  if(!ok2) queueRetry('duel', saveDuelState);
+}
+
+/* ---------------- ACTIONS: hearts / team ---------------- */
+async function loseLife(t){
+  hearts[t] = Math.max(hearts[t]-1, -1);
+  pushHistory(`💔 ${NAMES[t]} perdió una vida (${hearts[t]}/20)`);
+  render();
+  const ok = await saveProfile(t);
+  if(!ok){
+    toast('No se ha sincronizado todavía, reintentando en segundo plano…');
+    queueRetry('profile:'+t, ()=>saveProfile(t));
+  }
+}
+async function resetLives(t){
+  if(!confirm(`¿Seguro que quieres restablecer las 20 vidas de ${NAMES[t]}?`)) return;
+  hearts[t] = 20;
+  pushHistory(`🔄 ${NAMES[t]} restableció sus 20 vidas`);
+  render();
+  const ok = await saveProfile(t);
+  if(!ok){
+    toast('No se ha sincronizado todavía, reintentando en segundo plano…');
+    queueRetry('profile:'+t, ()=>saveProfile(t));
+  }
+}
+async function removePoke(t, id){
+  const p = teams[t].find(x=>x.id===id);
+  teams[t] = teams[t].filter(x=>x.id!==id);
+  render();
+  const ok = await saveProfile(t);
+  if(!ok){
+    toast('No se ha sincronizado todavía, reintentando en segundo plano…');
+    queueRetry('profile:'+t, ()=>saveProfile(t));
+  }
+  if(p) pushHistory(`➖ ${NAMES[t]} quitó a ${p.nickname} (${p.species}) de su equipo`);
+  render();
+}
+
+/* ---------------- PokeAPI helpers ---------------- */
+async function fetchPokemonSprite(name){
+  const slug = name.toLowerCase().trim().replace(/\s+/g,'-');
+  const res = await fetch('https://pokeapi.co/api/v2/pokemon/'+slug);
+  if(!res.ok) throw new Error('not found');
+  const data = await res.json();
+  const sprite = (data.sprites.other && data.sprites.other['official-artwork'] && data.sprites.other['official-artwork'].front_default) || data.sprites.front_default;
+  if(!sprite) throw new Error('no sprite');
+  return { name: data.name, sprite };
+}
+async function fetchItemSprite(name){
+  const slug = name.toLowerCase().trim().replace(/\s+/g,'-');
+  const res = await fetch('https://pokeapi.co/api/v2/item/'+slug);
+  if(!res.ok) throw new Error('not found');
+  const data = await res.json();
+  const sprite = data.sprites && data.sprites.default;
+  if(!sprite) throw new Error('no sprite');
+  return { name: data.name, sprite };
+}
+
+/* ---------------- Autocomplete ---------------- */
+function attachAutocomplete(inputEl, dropdownEl, getList){
+  inputEl.addEventListener('input', ()=>{
+    const val = inputEl.value.trim().toLowerCase();
+    if(val.length < 3){ dropdownEl.classList.remove('show'); dropdownEl.innerHTML=''; return; }
+    const list = getList();
+    const matches = list.filter(n=> n.startsWith(val)).slice(0, 8);
+    if(matches.length === 0){ dropdownEl.classList.remove('show'); dropdownEl.innerHTML=''; return; }
+    dropdownEl.innerHTML = matches.map(n=>`<div class="autocomplete-item">${n.replace(/-/g,' ')}</div>`).join('');
+    dropdownEl.classList.add('show');
+    [...dropdownEl.children].forEach((el,i)=>{
+      el.onclick = ()=>{
+        inputEl.value = matches[i];
+        dropdownEl.classList.remove('show'); dropdownEl.innerHTML='';
+        inputEl.focus();
+      };
+    });
+  });
+  inputEl.addEventListener('blur', ()=> setTimeout(()=>{ dropdownEl.classList.remove('show'); }, 150));
+}
+
+/* ---------------- MODALS ---------------- */
+function openModal(html){
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'modal-overlay';
+  overlay.innerHTML = `<div class="modal">${html}</div>`;
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closeModal(); });
+  document.body.appendChild(overlay);
+}
+function closeModal(){
+  const o = document.getElementById('modal-overlay');
+  if(o) o.remove();
+}
+
+function openAddPoke(t){
+  openModal(`
+    <h3>Añadir Pokémon · ${NAMES[t]}</h3>
+    <div class="field">
+      <label>Mote</label>
+      <input type="text" id="pk-nick" placeholder="ej: Croc">
+    </div>
+    <div class="field autocomplete-wrap">
+      <label>Pokémon</label>
+      <input type="text" id="pk-species" placeholder="ej: totodile" autocomplete="off">
+      <div class="autocomplete-list" id="pk-species-list"></div>
+    </div>
+    <div class="err-msg" id="pk-err"></div>
+    <div class="modal-actions">
+      <button class="ghost" onclick="closeModal()">Cancelar</button>
+      <button class="primary" id="pk-submit" onclick="submitAddPoke('${t}')">Añadir</button>
+    </div>
+  `);
+  attachAutocomplete(document.getElementById('pk-species'), document.getElementById('pk-species-list'), ()=>POKEMON_NAMES);
+}
+async function submitAddPoke(t){
+  const nick = document.getElementById('pk-nick').value.trim();
+  const species = document.getElementById('pk-species').value.trim();
+  const err = document.getElementById('pk-err');
+  const btn = document.getElementById('pk-submit');
+  err.textContent = '';
+  if(!nick || !species){ err.textContent = 'Rellena el mote y el Pokémon.'; return; }
+  if(teams[t].length >= 6){ err.textContent = 'El equipo ya tiene 6 Pokémon.'; return; }
+  btn.textContent = 'Buscando…'; btn.disabled = true;
+  try{
+    const p = await fetchPokemonSprite(species);
+    teams[t].push({ id: crypto.randomUUID(), nickname: nick, species: p.name, sprite: p.sprite });
+    pushHistory(`➕ ${NAMES[t]} añadió a ${nick} (${p.name}) a su equipo`);
+    closeModal();
+    render();
+    const ok = await saveProfile(t);
+    if(!ok) queueRetry('profile:'+t, ()=>saveProfile(t));
+  }catch(e){
+    err.textContent = 'No se encontró ese Pokémon. Prueba con el nombre en inglés (ej: "totodile").';
+    btn.textContent = 'Añadir'; btn.disabled = false;
+  }
+}
+
+function openNewOffer(){
+  openNewGenericOffer('offer');
+}
+function openCounterOffer(offerId){
+  openNewGenericOffer('counter', offerId);
+}
+
+let pendingItems = [];
+function openNewGenericOffer(mode, offerId){
+  pendingItems = [];
+  openModal(`
+    <h3>${mode==='offer' ? 'Nueva oferta' : 'Ofrecer a cambio'}</h3>
+    <div class="field">
+      <label>¿Quién ${mode==='offer'?'ofrece':'ofrece a cambio'}?</label>
+      <select id="tr-select">
+        ${TRAINERS.map(t=>`<option value="${t}">${NAMES[t]}</option>`).join('')}
+      </select>
+    </div>
+    <div class="item-row-add">
+      <div class="field">
+        <label>Tipo</label>
+        <select id="it-type">
+          <option value="pokemon">Pokémon</option>
+          <option value="item">Objeto</option>
+        </select>
+      </div>
+      <div class="field autocomplete-wrap">
+        <label>Nombre</label>
+        <input type="text" id="it-name" placeholder="ej: tyranitar" autocomplete="off">
+        <div class="autocomplete-list" id="it-name-list"></div>
+      </div>
+      <button class="ghost" onclick="addPendingItem()">Añadir</button>
+    </div>
+    <div class="err-msg" id="offer-err"></div>
+    <div class="pending-chips" id="pending-chips"></div>
+    <div class="modal-actions">
+      <button class="ghost" onclick="closeModal()">Cancelar</button>
+      <button class="primary" onclick="submitOffer('${mode}', ${offerId?`'${offerId}'`:'null'})">Publicar</button>
+    </div>
+  `);
+  attachAutocomplete(
+    document.getElementById('it-name'),
+    document.getElementById('it-name-list'),
+    ()=> document.getElementById('it-type').value === 'pokemon' ? POKEMON_NAMES : ITEM_NAMES
+  );
+}
+async function addPendingItem(){
+  const type = document.getElementById('it-type').value;
+  const name = document.getElementById('it-name').value.trim();
+  const err = document.getElementById('offer-err');
+  err.textContent = '';
+  if(!name) return;
+  err.textContent = 'Buscando…';
+  try{
+    const res = type==='pokemon' ? await fetchPokemonSprite(name) : await fetchItemSprite(name);
+    pendingItems.push({ type, name: res.name, sprite: res.sprite });
+    document.getElementById('it-name').value = '';
+    err.textContent = '';
+    renderPendingChips();
+  }catch(e){
+    err.textContent = 'No se encontró eso. Prueba el nombre en inglés.';
+  }
+}
+function renderPendingChips(){
+  document.getElementById('pending-chips').innerHTML = pendingItems.map((it,i)=>
+    `<div class="chip"><img src="${it.sprite}"><span>${it.name.replace(/-/g,' ')}</span> <button class="ghost" style="padding:0 6px;" onclick="removePendingItem(${i})">✕</button></div>`
+  ).join('');
+}
+function removePendingItem(i){ pendingItems.splice(i,1); renderPendingChips(); }
+
+async function submitOffer(mode, offerId){
+  const trainer = document.getElementById('tr-select').value;
+  const err = document.getElementById('offer-err');
+  if(pendingItems.length === 0){ err.textContent = 'Añade al menos una cosa a la oferta.'; return; }
+
+  if(mode === 'offer'){
+    tradesActive.unshift({ id: crypto.randomUUID(), trainer, items: pendingItems, ts: Date.now(), counters: [] });
+    pushHistory(`🔁 ${NAMES[trainer]} publicó una oferta de trade`);
+  } else {
+    const offer = tradesActive.find(o=>o.id===offerId);
+    if(offer){
+      offer.counters.push({ id: crypto.randomUUID(), trainer, items: pendingItems, ts: Date.now() });
+      pushHistory(`🔁 ${NAMES[trainer]} ofreció algo a cambio en un trade`);
+    }
+  }
+  closeModal();
+  render();
+  const ok = await saveTrades();
+  if(!ok) queueRetry('trades', saveTrades);
+}
+
+async function acceptTrade(offerId, counterId){
+  const offer = tradesActive.find(o=>o.id===offerId);
+  if(!offer) return;
+  const counter = offer.counters.find(c=>c.id===counterId);
+  if(!counter) return;
+  if(!confirm(`¿Aceptar que ${NAMES[offer.trainer]} dé sus cosas a cambio de lo de ${NAMES[counter.trainer]}?`)) return;
+
+  tradesHistory.unshift({
+    id: crypto.randomUUID(),
+    offerTrainer: offer.trainer, offerItems: offer.items,
+    counterTrainer: counter.trainer, counterItems: counter.items,
+    ts: Date.now()
+  });
+  tradesActive = tradesActive.filter(o=>o.id!==offerId);
+  pushHistory(`🤝 Trade cerrado entre ${NAMES[offer.trainer]} y ${NAMES[counter.trainer]}`);
+  render();
+  const ok = await saveTrades();
+  if(!ok) queueRetry('trades', saveTrades);
+}
+
+async function cancelOffer(offerId){
+  if(!confirm('¿Cancelar esta oferta?')) return;
+  tradesActive = tradesActive.filter(o=>o.id!==offerId);
+  render();
+  const ok = await saveTrades();
+  if(!ok) queueRetry('trades', saveTrades);
+}
+
+async function deleteTradeRecord(id){
+  if(!confirm('¿Eliminar este trade del historial? (Úsalo cuando ya esté pagado)')) return;
+  tradesHistory = tradesHistory.filter(r=>r.id!==id);
+  render();
+  const ok = await saveTrades();
+  if(!ok) queueRetry('trades', saveTrades);
+}
+
+/* ---------------- INIT + polling ---------------- */
+(async function init(){
+  loadNameLists();
+  await loadAll();
+  render();
+  setInterval(async ()=>{
+    if(document.getElementById('modal-overlay') || duelSpinning) return; // don't refresh mid-edit or mid-spin
+    await loadAll();
+    render();
+  }, 20000);
+})();
+</script>
+</body>
+</html>
