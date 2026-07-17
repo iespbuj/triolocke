@@ -1046,7 +1046,7 @@ function renderWheelAndBracket(){
   let match1RewardSection = '';
   if(match1Winner){
     match1RewardSection = `
-      <div class="spin-note" style="margin-top:-4px;">🎁 ${NAMES[match1Winner]} se lleva <strong style="color:var(--silver-bright)">1 captura extra</strong> por ganar el Combate 1</div>
+      <div class="spin-note" style="margin-top:-4px;">🎁 ${NAMES[match1.p1]} y ${NAMES[match1.p2]} se llevan <strong style="color:var(--silver-bright)">1 captura extra</strong> cada uno por el Combate 1</div>
       <div class="section-sub" style="margin-top:6px;">Ruleta del perdedor del Combate 1</div>
       <div class="final-wheels-row">
         ${renderMatch1LoserWheelBlock()}
@@ -1203,16 +1203,9 @@ function spinMatch1LoserWheel(){
     duelState.match1LoserPrize = outcome.label;
 
     const loser = [duelState.match1.p1, duelState.match1.p2].find(p=> p!==duelState.match1Winner);
-    if(outcome.hearts > 0){
-      hearts[loser] = Math.max(hearts[loser] - outcome.hearts, -1);
-      pushHistory(`💀 ${NAMES[loser]} perdió el Combate 1 y le tocó: ${outcome.label} (${hearts[loser]}/20)`);
-    } else {
-      pushHistory(`💀 ${NAMES[loser]} perdió el Combate 1 y le tocó: ${outcome.label}`);
-    }
+    pushHistory(`💀 ${NAMES[loser]} perdió el Combate 1 y le tocó: ${outcome.label} (aplicar manualmente si corresponde)`);
 
     render();
-    const ok1 = await saveProfile(loser);
-    if(!ok1) queueRetry('profile:'+loser, ()=>saveProfile(loser));
     const ok2 = await saveDuelState();
     if(!ok2) queueRetry('duel', saveDuelState);
   }, 4300);
@@ -1238,7 +1231,7 @@ function renderDuelTallyAndHistory(){
         <div class="dh-name">${d.name}</div>
         <div class="dh-date">${fmtTime(new Date(d.date).getTime())}</div>
         <div>${NAMES[d.match1.p1]} vs ${NAMES[d.match1.p2]} → ganó ${NAMES[d.match1.winner]} · Final: ${NAMES[d.final.p1]} vs ${NAMES[d.final.p2]} → <span class="dh-champ">campeón ${NAMES[d.champion]}</span></div>
-        ${d.match1WinnerReward ? `<div class="dh-reward">🎁 ${NAMES[d.match1.winner]} +${d.match1WinnerReward} por ganar el Combate 1</div>` : ''}
+        ${d.match1WinnerReward ? `<div class="dh-reward">🎁 ${NAMES[d.match1.p1]} y ${NAMES[d.match1.p2]} +${d.match1WinnerReward} cada uno por el Combate 1</div>` : ''}
         ${d.match1LoserPrize ? `<div class="dh-reward">💀 ${NAMES[[d.match1.p1, d.match1.p2].find(p=>p!==d.match1.winner)]} → ${d.match1LoserPrize}</div>` : ''}
         ${d.finalWinnerPrize ? `<div class="dh-reward">🏆 ${NAMES[d.champion]} → ${d.finalWinnerPrize}${d.finalLoserPrize && d.finalLoser ? ` · ${NAMES[d.finalLoser]} → ${d.finalLoserPrize}` : ''}</div>` : ''}
       </div>
