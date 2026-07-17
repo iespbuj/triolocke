@@ -1322,6 +1322,7 @@ function spinWheel(){
     duelSpinning = false;
     const picked = candidates[idx];
     duelState.picks = [...(duelState.picks||[]), picked];
+    duelWheelRotation = 0; // la siguiente rueda tiene otro número de candidatos, debe arrancar limpia
     if(duelState.picks.length === 2){
       const bye = TRAINERS.find(t=> !duelState.picks.includes(t));
       duelState.bye = bye;
