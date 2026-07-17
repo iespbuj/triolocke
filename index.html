@@ -544,12 +544,22 @@ const TRAINERS = ['iker','joel','alex'];
 const NAMES = { iker:'Iker', joel:'Joel', alex:'Alex' };
 
 const LOSER_PRIZES = ['1 captura extra', '1 Menta de Naturaleza', '1 Cápsula Habilidad', 'Banda Focus', 'Pesa Recia', 'Baya Meloc', 'Nada'];
-const WINNER_PRIZES = ['2 capturas extra', 'Cápsula Habilidad', 'Elegir entre 3 huevos', '2 Mentas de Naturaleza', '3 Caramelos Raros', 'Permiso para una ilegalidad', 'Banda Focus'];
+const WINNER_PRIZES = ['2 capturas extra', 'Cápsula Habilidad', 'Elegir entre 3 huevos', '2 Mentas de Naturaleza', '3 Caramelos Raros', 'Permiso para una ilegalidad'];
 const WHEEL_COLORS = ['#9fb2da','#c9a86a','#c9cfdd','#7d97c9','#e0c68a','#b8bfd1','#8fa8d6'];
+
+const MATCH1_LOSER_WHEEL = [
+  { label: 'Pierde 5 vidas', hearts: 5 },
+  { label: 'Mueren 2 Pokémon de tu equipo titular (uno elegido por cada uno de los otros dos)', hearts: 0 },
+  { label: 'Pierde 3 vidas', hearts: 3 },
+  { label: 'Pierde 1 vida y debes dar un Pokémon (que tú elijas) al ganador del torneo', hearts: 1 },
+  { label: 'Pierde 10 vidas', hearts: 10 },
+  { label: 'Se cambia un Pokémon de tu equipo (elegido por los otros dos) por un huevo random', hearts: 0 },
+  { label: 'Suerte: solo pierdes 1 vida', hearts: 1 }
+];
 
 let hearts = {}, teams = {}, history = [], tradesActive = [], tradesHistory = [];
 let normas = [];
-let duelState = { scheduled:null, picks:[], bye:null, match1:null, match1Winner:null, finalWinner:null, finalWinnerPrize:null, finalLoserPrize:null };
+let duelState = { scheduled:null, picks:[], bye:null, match1:null, match1Winner:null, match1LoserPrize:null, finalWinner:null, finalWinnerPrize:null, finalLoserPrize:null };
 let duelHistory = [];
 let duelSpinning = false;
 let duelWheelRotation = 0;
@@ -557,6 +567,8 @@ let finalWheelSpinningWinner = false;
 let finalWheelSpinningLoser = false;
 let finalWheelRotationWinner = 0;
 let finalWheelRotationLoser = 0;
+let match1LoserWheelSpinning = false;
+let match1LoserWheelRotation = 0;
 let duelCountdownInterval = null;
 let view = 'home';
 let currentTrainer = null;
@@ -631,7 +643,7 @@ async function loadAll(){
     Promise.all(TRAINERS.map(t => storeGet('profile:'+t, {hearts:20, team:[]}))),
     storeGet('history', []),
     storeGet('trades', {active:[], history:[]}),
-    storeGet('duel', { scheduled:null, picks:[], bye:null, match1:null, match1Winner:null, finalWinner:null, finalWinnerPrize:null, finalLoserPrize:null }),
+    storeGet('duel', { scheduled:null, picks:[], bye:null, match1:null, match1Winner:null, match1LoserPrize:null, finalWinner:null, finalWinnerPrize:null, finalLoserPrize:null }),
     storeGet('duelHistory', []),
     storeGet('normas', [])
   ]);
@@ -1029,12 +1041,16 @@ function renderWheelAndBracket(){
   }
 
   // Fase 2: ya sabemos quién juega el Combate 1 y quién pasa directo a la final
-  const { bye, match1, match1Winner, finalWinner, finalWinnerPrize, finalLoserPrize } = duelState;
+  const { bye, match1, match1Winner, match1LoserPrize, finalWinner, finalWinnerPrize, finalLoserPrize } = duelState;
 
-  let rewardNote = '';
+  let match1RewardSection = '';
   if(match1Winner){
-    rewardNote = `
-      <div class="spin-note" style="margin-top:-4px;">🎁 ${NAMES[match1.p1]} y ${NAMES[match1.p2]} se llevan <strong style="color:var(--silver-bright)">1 captura extra</strong> cada uno por el Combate 1</div>
+    match1RewardSection = `
+      <div class="spin-note" style="margin-top:-4px;">🎁 ${NAMES[match1Winner]} se lleva <strong style="color:var(--silver-bright)">1 captura extra</strong> por ganar el Combate 1</div>
+      <div class="section-sub" style="margin-top:6px;">Ruleta del perdedor del Combate 1</div>
+      <div class="final-wheels-row">
+        ${renderMatch1LoserWheelBlock()}
+      </div>
     `;
   }
 
@@ -1049,7 +1065,7 @@ function renderWheelAndBracket(){
             ${NAMES[finalWinner]} se lleva: <strong style="color:var(--silver-bright)">${finalWinnerPrize}</strong><br>
             ${NAMES[finalLoser]} se lleva: <strong style="color:var(--silver-bright)">${finalLoserPrize}</strong>
           </div>
-          <button class="primary" onclick="finishDuel()">Guardar resultado y preparar la próxima semana</button>
+          ${match1LoserPrize ? `<button class="primary" onclick="finishDuel()">Guardar resultado y preparar la próxima semana</button>` : `<div class="spin-note">Falta girar la ruleta del perdedor del Combate 1 para poder cerrar la semana</div>`}
         </div>
       `;
     } else {
@@ -1075,7 +1091,7 @@ function renderWheelAndBracket(){
         <div class="bracket-bye">${NAMES[bye]} pasa directo a la final</div>
       </div>
 
-      ${rewardNote}
+      ${match1RewardSection}
 
       ${match1Winner ? `
       <div class="bracket-match">
@@ -1128,6 +1144,80 @@ function renderPrizeWheelBlock(role){
   `;
 }
 
+function renderMatch1LoserWheelBlock(){
+  const { match1, match1Winner, match1LoserPrize } = duelState;
+  const loser = [match1.p1, match1.p2].find(p=> p!==match1Winner);
+  const outcomes = MATCH1_LOSER_WHEEL;
+  const title = `💀 Ruleta del perdedor · ${NAMES[loser]}`;
+
+  if(match1LoserPrize){
+    return `
+      <div class="wheel-wrap">
+        <div class="spin-note">${title}</div>
+        <div class="prize-result">☠️ ${match1LoserPrize}</div>
+      </div>
+    `;
+  }
+
+  const segAngle = 360/outcomes.length;
+  const stops = outcomes.map((o,i)=> `${WHEEL_COLORS[i%WHEEL_COLORS.length]} ${i*segAngle}deg ${(i+1)*segAngle}deg`).join(', ');
+
+  return `
+    <div class="wheel-wrap">
+      <div class="spin-note">${title}</div>
+      <div class="wheel-outer small">
+        <div class="wheel-pointer"></div>
+        <div class="wheel" id="match1-loser-wheel" style="background: conic-gradient(${stops});"><div class="wheel-center"></div></div>
+      </div>
+      <div class="prize-legend">
+        ${outcomes.map((o,i)=>`<div class="prize-legend-item"><span class="prize-swatch" style="background:${WHEEL_COLORS[i%WHEEL_COLORS.length]}"></span>${o.label}</div>`).join('')}
+      </div>
+      <button class="primary" onclick="spinMatch1LoserWheel()" ${match1LoserWheelSpinning?'disabled':''}>${match1LoserWheelSpinning?'Girando…':'Girar la rueda'}</button>
+    </div>
+  `;
+}
+
+function spinMatch1LoserWheel(){
+  if(match1LoserWheelSpinning || duelState.match1LoserPrize) return;
+  const outcomes = MATCH1_LOSER_WHEEL;
+  match1LoserWheelSpinning = true;
+  render();
+
+  const idx = Math.floor(Math.random()*outcomes.length);
+  const segAngle = 360/outcomes.length;
+  const center = idx*segAngle + segAngle/2;
+  const fullSpins = 5 + Math.floor(Math.random()*2);
+  const target = fullSpins*360 + (360 - center);
+  match1LoserWheelRotation += target;
+
+  const wheelEl = document.getElementById('match1-loser-wheel');
+  if(wheelEl){
+    wheelEl.style.transition = 'transform 4.2s cubic-bezier(0.15, 0.85, 0.25, 1)';
+    void wheelEl.offsetWidth;
+    wheelEl.style.transform = `rotate(${match1LoserWheelRotation}deg)`;
+  }
+
+  setTimeout(async ()=>{
+    const outcome = outcomes[idx];
+    match1LoserWheelSpinning = false;
+    duelState.match1LoserPrize = outcome.label;
+
+    const loser = [duelState.match1.p1, duelState.match1.p2].find(p=> p!==duelState.match1Winner);
+    if(outcome.hearts > 0){
+      hearts[loser] = Math.max(hearts[loser] - outcome.hearts, -1);
+      pushHistory(`💀 ${NAMES[loser]} perdió el Combate 1 y le tocó: ${outcome.label} (${hearts[loser]}/20)`);
+    } else {
+      pushHistory(`💀 ${NAMES[loser]} perdió el Combate 1 y le tocó: ${outcome.label}`);
+    }
+
+    render();
+    const ok1 = await saveProfile(loser);
+    if(!ok1) queueRetry('profile:'+loser, ()=>saveProfile(loser));
+    const ok2 = await saveDuelState();
+    if(!ok2) queueRetry('duel', saveDuelState);
+  }, 4300);
+}
+
 function renderDuelTallyAndHistory(){
   const tally = {}; TRAINERS.forEach(t=> tally[t]=0);
   duelHistory.forEach(d=>{ if(tally[d.champion] !== undefined) tally[d.champion]++; });
@@ -1148,7 +1238,8 @@ function renderDuelTallyAndHistory(){
         <div class="dh-name">${d.name}</div>
         <div class="dh-date">${fmtTime(new Date(d.date).getTime())}</div>
         <div>${NAMES[d.match1.p1]} vs ${NAMES[d.match1.p2]} → ganó ${NAMES[d.match1.winner]} · Final: ${NAMES[d.final.p1]} vs ${NAMES[d.final.p2]} → <span class="dh-champ">campeón ${NAMES[d.champion]}</span></div>
-        ${d.match1Reward ? `<div class="dh-reward">🎁 ${NAMES[d.match1.p1]} y ${NAMES[d.match1.p2]} +${d.match1Reward} por el Combate 1</div>` : ''}
+        ${d.match1WinnerReward ? `<div class="dh-reward">🎁 ${NAMES[d.match1.winner]} +${d.match1WinnerReward} por ganar el Combate 1</div>` : ''}
+        ${d.match1LoserPrize ? `<div class="dh-reward">💀 ${NAMES[[d.match1.p1, d.match1.p2].find(p=>p!==d.match1.winner)]} → ${d.match1LoserPrize}</div>` : ''}
         ${d.finalWinnerPrize ? `<div class="dh-reward">🏆 ${NAMES[d.champion]} → ${d.finalWinnerPrize}${d.finalLoserPrize && d.finalLoser ? ` · ${NAMES[d.finalLoser]} → ${d.finalLoserPrize}` : ''}</div>` : ''}
       </div>
     `).join('')}
@@ -1181,12 +1272,14 @@ async function submitScheduleDuel(){
   const dt = document.getElementById('duel-datetime').value;
   const err = document.getElementById('duel-err');
   if(!name || !dt){ err.textContent = 'Rellena el nombre y la fecha.'; return; }
-  duelState = { scheduled: { name, datetime: dt }, picks:[], bye:null, match1:null, match1Winner:null, finalWinner:null, finalWinnerPrize:null, finalLoserPrize:null };
+  duelState = { scheduled: { name, datetime: dt }, picks:[], bye:null, match1:null, match1Winner:null, match1LoserPrize:null, finalWinner:null, finalWinnerPrize:null, finalLoserPrize:null };
   duelWheelRotation = 0;
   finalWheelRotationWinner = 0;
   finalWheelRotationLoser = 0;
   finalWheelSpinningWinner = false;
   finalWheelSpinningLoser = false;
+  match1LoserWheelRotation = 0;
+  match1LoserWheelSpinning = false;
   closeModal();
   render();
   const ok = await saveDuelState();
@@ -1195,12 +1288,14 @@ async function submitScheduleDuel(){
 
 function resetDuel(){
   if(!confirm('¿Reiniciar el temporizador y el combate actual? (no borra el historial de combates ya jugados)')) return;
-  duelState = { scheduled:null, picks:[], bye:null, match1:null, match1Winner:null, finalWinner:null, finalWinnerPrize:null, finalLoserPrize:null };
+  duelState = { scheduled:null, picks:[], bye:null, match1:null, match1Winner:null, match1LoserPrize:null, finalWinner:null, finalWinnerPrize:null, finalLoserPrize:null };
   duelWheelRotation = 0;
   finalWheelRotationWinner = 0;
   finalWheelRotationLoser = 0;
   finalWheelSpinningWinner = false;
   finalWheelSpinningLoser = false;
+  match1LoserWheelRotation = 0;
+  match1LoserWheelSpinning = false;
   render();
   saveDuelState().then(ok=>{ if(!ok) queueRetry('duel', saveDuelState); });
 }
@@ -1232,6 +1327,7 @@ function spinWheel(){
       duelState.bye = bye;
       duelState.match1 = { p1: duelState.picks[0], p2: duelState.picks[1] };
       duelState.match1Winner = null;
+      duelState.match1LoserPrize = null;
       duelState.finalWinner = null;
       duelState.finalWinnerPrize = null;
       duelState.finalLoserPrize = null;
@@ -1295,7 +1391,7 @@ function spinFinalWheel(role){
 }
 
 async function finishDuel(){
-  const { scheduled, bye, match1, match1Winner, finalWinner, finalWinnerPrize, finalLoserPrize } = duelState;
+  const { scheduled, bye, match1, match1Winner, match1LoserPrize, finalWinner, finalWinnerPrize, finalLoserPrize } = duelState;
   const finalLoser = [match1Winner, bye].find(p=> p!==finalWinner);
   duelHistory.unshift({
     id: crypto.randomUUID(),
@@ -1304,18 +1400,21 @@ async function finishDuel(){
     match1: { p1: match1.p1, p2: match1.p2, winner: match1Winner },
     final: { p1: match1Winner, p2: bye, winner: finalWinner },
     champion: finalWinner,
-    match1Reward: '1 captura extra',
+    match1WinnerReward: '1 captura extra',
+    match1LoserPrize,
     finalWinnerPrize,
     finalLoserPrize,
     finalLoser,
     ts: Date.now()
   });
-  duelState = { scheduled:null, picks:[], bye:null, match1:null, match1Winner:null, finalWinner:null, finalWinnerPrize:null, finalLoserPrize:null };
+  duelState = { scheduled:null, picks:[], bye:null, match1:null, match1Winner:null, match1LoserPrize:null, finalWinner:null, finalWinnerPrize:null, finalLoserPrize:null };
   duelWheelRotation = 0;
   finalWheelRotationWinner = 0;
   finalWheelRotationLoser = 0;
   finalWheelSpinningWinner = false;
   finalWheelSpinningLoser = false;
+  match1LoserWheelRotation = 0;
+  match1LoserWheelSpinning = false;
   render();
   const ok1 = await saveDuelHistory();
   if(!ok1) queueRetry('duelHistory', saveDuelHistory);
