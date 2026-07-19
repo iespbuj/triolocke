@@ -545,7 +545,18 @@ const NAMES = { iker:'Iker', joel:'Joel', alex:'Alex' };
 
 const LOSER_PRIZES = ['1 captura extra', '1 Menta de Naturaleza', '1 Cápsula Habilidad', 'Banda Focus', 'Pesa Recia', 'Baya Meloc', 'Nada'];
 const WINNER_PRIZES = ['2 capturas extra', 'Cápsula Habilidad', 'Elegir entre 3 huevos', '2 Mentas de Naturaleza', '3 Caramelos Raros', 'Permiso para una ilegalidad'];
-const WHEEL_COLORS = ['#9fb2da','#c9a86a','#c9cfdd','#7d97c9','#e0c68a','#b8bfd1','#8fa8d6'];
+const WHEEL_COLORS = ['#9fb2da','#c9a86a','#c9cfdd','#7d97c9','#e0c68a','#b8bfd1','#8fa8d6','#d18aa0'];
+
+const SANCION_WHEEL = [
+  { label: 'Pierde 5 vidas' },
+  { label: 'Debe liberar el Pokémon con el que cometió la infracción' },
+  { label: 'Pierde 3 vidas' },
+  { label: 'Libera los 6 Pokémon de su equipo, elegidos por Alex' },
+  { label: 'Debe dar 2 Pokémon de su equipo a Alex, elegidos por Alex' },
+  { label: 'Pierde 1 vida' },
+  { label: 'Perdón: no pasa nada, queda impune' },
+  { label: 'Pierde 8 vidas' }
+];
 
 const MATCH1_LOSER_WHEEL = [
   { label: 'Pierde 5 vidas', hearts: 5 },
@@ -559,10 +570,26 @@ const MATCH1_LOSER_WHEEL = [
 
 let hearts = {}, teams = {}, history = [], tradesActive = [], tradesHistory = [];
 let normas = [];
+let sancionState = { offender: null, prize: null };
+let sancionWheelSpinning = false;
+let sancionWheelRotation = 0;
 let duelState = { scheduled:null, picks:[], bye:null, match1:null, match1Winner:null, match1LoserPrize:null, finalWinner:null, finalWinnerPrize:null, finalLoserPrize:null };
 let duelHistory = [];
 let duelSpinning = false;
 let duelWheelRotation = 0;
+const SANCTION_WHEEL = [
+  'Pierde 5 vidas',
+  'Los otros dos eligen un Pokémon de tu equipo y lo liberas',
+  'Pierde 3 vidas',
+  'El combate se da por perdido y hay que repetirlo respetando el nivel máximo',
+  'Los otros dos eligen un Pokémon de tu equipo y lo mandan a la PC (no se puede usar hasta el final de la run)',
+  'Pierde 1 vida y el Pokémon infractor no puede subir de nivel hasta el próximo gimnasio',
+  'Perdón: no pasa nada, queda impune',
+  'Pierde 8 vidas y no puedes usar objetos curativos en el próximo combate de gimnasio'
+];
+let sanctionWheelSpinning = false;
+let sanctionWheelRotation = 0;
+
 let finalWheelSpinningWinner = false;
 let finalWheelSpinningLoser = false;
 let finalWheelRotationWinner = 0;
@@ -639,13 +666,14 @@ async function storeSet(key, val){
 }
 
 async function loadAll(){
-  const [profileResults, historyResult, tradesResult, duelResult, duelHistoryResult, normasResult] = await Promise.all([
+  const [profileResults, historyResult, tradesResult, duelResult, duelHistoryResult, normasResult, sancionResult] = await Promise.all([
     Promise.all(TRAINERS.map(t => storeGet('profile:'+t, {hearts:20, team:[]}))),
     storeGet('history', []),
     storeGet('trades', {active:[], history:[]}),
     storeGet('duel', { scheduled:null, picks:[], bye:null, match1:null, match1Winner:null, match1LoserPrize:null, finalWinner:null, finalWinnerPrize:null, finalLoserPrize:null }),
     storeGet('duelHistory', []),
-    storeGet('normas', [])
+    storeGet('normas', []),
+    storeGet('sancion', { offender: null, prize: null })
   ]);
   TRAINERS.forEach((t, i) => {
     hearts[t] = profileResults[i].hearts;
@@ -657,6 +685,7 @@ async function loadAll(){
   duelState = duelResult;
   duelHistory = duelHistoryResult;
   normas = normasResult;
+  sancionState = sancionResult;
   loaded = true;
 }
 async function saveProfile(t){
@@ -673,6 +702,9 @@ async function saveDuelHistory(){
 }
 async function saveNormas(){
   return await storeSet('normas', normas);
+}
+async function saveSancion(){
+  return await storeSet('sancion', sancionState);
 }
 
 function fmtTime(ts){
@@ -805,6 +837,7 @@ function renderProfile(app, t){
       <div class="action-row">
         <button class="danger-outline" onclick="loseLife('${t}')">💔 Perder vida</button>
         <button class="ghost" onclick="resetLives('${t}')">🔄 Restablecer</button>
+        <button class="ghost" onclick="openApplySanction('${t}')">⚖️ Aplicar sanción</button>
       </div>
     </div>
 
@@ -859,7 +892,114 @@ function renderNormas(app){
         </div>
       `).join('')}
     </div>`}
+
+    <div class="section-sub">⚖️ Sanciones</div>
+    ${renderSancionSection()}
   `;
+}
+
+function renderSancionSection(){
+  if(!sancionState || !sancionState.offender){
+    return `
+      <div style="text-align:center;">
+        <button class="danger-outline" onclick="openApplySancion()">⚖️ Aplicar sanción</button>
+      </div>
+    `;
+  }
+
+  if(sancionState.prize){
+    return `
+      <div class="duel-card" style="padding:22px 20px;">
+        <div class="duel-name" style="font-size:17px;">${NAMES[sancionState.offender]} cometió una infracción</div>
+        <div class="prize-result" style="margin:14px auto 18px;">⚖️ ${sancionState.prize}</div>
+        <button class="ghost" onclick="closeSancion()">Cerrar sanción</button>
+      </div>
+    `;
+  }
+
+  const outcomes = SANCION_WHEEL;
+  const segAngle = 360/outcomes.length;
+  const stops = outcomes.map((o,i)=> `${WHEEL_COLORS[i%WHEEL_COLORS.length]} ${i*segAngle}deg ${(i+1)*segAngle}deg`).join(', ');
+
+  return `
+    <div class="wheel-wrap">
+      <div class="spin-note">⚖️ Ruleta de sanciones · ${NAMES[sancionState.offender]}</div>
+      <div class="wheel-outer small">
+        <div class="wheel-pointer"></div>
+        <div class="wheel" id="sancion-wheel" style="background: conic-gradient(${stops});"><div class="wheel-center"></div></div>
+      </div>
+      <div class="prize-legend">
+        ${outcomes.map((o,i)=>`<div class="prize-legend-item"><span class="prize-swatch" style="background:${WHEEL_COLORS[i%WHEEL_COLORS.length]}"></span>${o.label}</div>`).join('')}
+      </div>
+      <button class="primary" onclick="spinSancionWheel()" ${sancionWheelSpinning?'disabled':''}>${sancionWheelSpinning?'Girando…':'Girar la rueda'}</button>
+    </div>
+  `;
+}
+
+function openApplySancion(){
+  openModal(`
+    <h3>Aplicar sanción</h3>
+    <div class="field">
+      <label>¿Quién cometió la infracción?</label>
+      <select id="sancion-trainer">
+        ${TRAINERS.map(t=>`<option value="${t}">${NAMES[t]}</option>`).join('')}
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="ghost" onclick="closeModal()">Cancelar</button>
+      <button class="primary" onclick="submitApplySancion()">Aplicar</button>
+    </div>
+  `);
+}
+async function submitApplySancion(){
+  const trainer = document.getElementById('sancion-trainer').value;
+  sancionState = { offender: trainer, prize: null };
+  sancionWheelRotation = 0;
+  sancionWheelSpinning = false;
+  closeModal();
+  render();
+  const ok = await saveSancion();
+  if(!ok) queueRetry('sancion', saveSancion);
+}
+
+function spinSancionWheel(){
+  if(sancionWheelSpinning || sancionState.prize) return;
+  const outcomes = SANCION_WHEEL;
+  sancionWheelSpinning = true;
+  render();
+
+  const idx = Math.floor(Math.random()*outcomes.length);
+  const segAngle = 360/outcomes.length;
+  const center = idx*segAngle + segAngle/2;
+  const fullSpins = 5 + Math.floor(Math.random()*2);
+  const target = fullSpins*360 + (360 - center);
+  sancionWheelRotation += target;
+
+  const wheelEl = document.getElementById('sancion-wheel');
+  if(wheelEl){
+    wheelEl.style.transition = 'transform 4.2s cubic-bezier(0.15, 0.85, 0.25, 1)';
+    void wheelEl.offsetWidth;
+    wheelEl.style.transform = `rotate(${sancionWheelRotation}deg)`;
+  }
+
+  setTimeout(async ()=>{
+    const outcome = outcomes[idx];
+    sancionWheelSpinning = false;
+    sancionState.prize = outcome.label;
+    render();
+    const ok = await saveSancion();
+    if(!ok) queueRetry('sancion', saveSancion);
+  }, 4300);
+}
+
+async function closeSancion(){
+  pushHistory(`⚖️ ${NAMES[sancionState.offender]} cometió una infracción y le tocó: ${sancionState.prize}`);
+  sancionState = { offender:null, prize:null };
+  sancionWheelRotation = 0;
+  sancionWheelSpinning = false;
+  render();
+  const ok = await saveSancion();
+  if(!ok) queueRetry('sancion', saveSancion);
 }
 
 function renderTrade(app){
@@ -1504,6 +1644,61 @@ function openModal(html){
 function closeModal(){
   const o = document.getElementById('modal-overlay');
   if(o) o.remove();
+}
+
+function openApplySanction(t){
+  const outcomes = SANCTION_WHEEL;
+  const segAngle = 360/outcomes.length;
+  const stops = outcomes.map((o,i)=> `${WHEEL_COLORS[i%WHEEL_COLORS.length]} ${i*segAngle}deg ${(i+1)*segAngle}deg`).join(', ');
+  sanctionWheelRotation = 0;
+  openModal(`
+    <h3>⚖️ Aplicar sanción · ${NAMES[t]}</h3>
+    <div class="wheel-wrap" id="sanction-wheel-wrap">
+      <div class="wheel-outer small">
+        <div class="wheel-pointer"></div>
+        <div class="wheel" id="sanction-wheel" style="background: conic-gradient(${stops});"><div class="wheel-center"></div></div>
+      </div>
+      <div class="prize-legend">
+        ${outcomes.map((o,i)=>`<div class="prize-legend-item"><span class="prize-swatch" style="background:${WHEEL_COLORS[i%WHEEL_COLORS.length]}"></span>${o}</div>`).join('')}
+      </div>
+      <button class="primary" id="sanction-spin-btn" onclick="spinSanctionWheel('${t}')">Girar la rueda</button>
+    </div>
+    <div class="modal-actions">
+      <button class="ghost" onclick="closeModal()">Cerrar</button>
+    </div>
+  `);
+}
+
+function spinSanctionWheel(t){
+  if(sanctionWheelSpinning) return;
+  const outcomes = SANCTION_WHEEL;
+  sanctionWheelSpinning = true;
+  const btn = document.getElementById('sanction-spin-btn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Girando…'; }
+
+  const idx = Math.floor(Math.random()*outcomes.length);
+  const segAngle = 360/outcomes.length;
+  const center = idx*segAngle + segAngle/2;
+  const fullSpins = 5 + Math.floor(Math.random()*2);
+  const target = fullSpins*360 + (360 - center);
+  sanctionWheelRotation += target;
+
+  const wheelEl = document.getElementById('sanction-wheel');
+  if(wheelEl){
+    wheelEl.style.transition = 'transform 4.2s cubic-bezier(0.15, 0.85, 0.25, 1)';
+    void wheelEl.offsetWidth;
+    wheelEl.style.transform = `rotate(${sanctionWheelRotation}deg)`;
+  }
+
+  setTimeout(()=>{
+    sanctionWheelSpinning = false;
+    const outcome = outcomes[idx];
+    const wrap = document.getElementById('sanction-wheel-wrap');
+    if(wrap){
+      wrap.innerHTML = `<div class="prize-result">⚖️ ${outcome}</div>`;
+    }
+    pushHistory(`⚖️ ${NAMES[t]} cometió una infracción y le tocó: ${outcome}`);
+  }, 4300);
 }
 
 function openAddPoke(t){
