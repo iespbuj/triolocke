@@ -2188,8 +2188,9 @@ async function setMatch1Winner(winner){
   render();
   const ok = await saveDuelState();
   if(!ok) queueRetry('duel', saveDuelState);
-  await addTickets(duelState.match1.p1, 5, 'Jugar el Combate 1');
-  await addTickets(duelState.match1.p2, 5, 'Jugar el Combate 1');
+  const loser = [duelState.match1.p1, duelState.match1.p2].find(p=> p!==winner);
+  await addTickets(winner, 10, 'Jugar y ganar el Combate 1');
+  await addTickets(loser, 5, 'Jugar y perder el Combate 1');
   render();
 }
 async function setFinalWinner(winner){
@@ -2197,8 +2198,9 @@ async function setFinalWinner(winner){
   render();
   const ok = await saveDuelState();
   if(!ok) queueRetry('duel', saveDuelState);
-  await addTickets(duelState.match1Winner, 5, 'Jugar la Final');
-  await addTickets(duelState.bye, 5, 'Jugar la Final');
+  const loser = [duelState.match1Winner, duelState.bye].find(p=> p!==winner);
+  await addTickets(winner, 10, 'Jugar y ganar la Final');
+  await addTickets(loser, 5, 'Jugar y perder la Final');
   render();
 }
 
@@ -2580,7 +2582,9 @@ async function deleteTradeRecord(id){
   await loadAll();
   render();
   setInterval(async ()=>{
-    if(document.getElementById('modal-overlay') || duelSpinning) return; // don't refresh mid-edit or mid-spin
+    const anySpinning = duelSpinning || finalWheelSpinningWinner || finalWheelSpinningLoser ||
+      match1LoserWheelSpinning || slotSpinning || slotJackpotSpinning || rouletteSpinning || sancionWheelSpinning;
+    if(document.getElementById('modal-overlay') || anySpinning) return; // don't refresh mid-edit or mid-spin
     await loadAll();
     render();
   }, 20000);
