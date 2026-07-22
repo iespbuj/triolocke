@@ -514,9 +514,203 @@ button.ghost:hover{ color:var(--silver-bright); border-color: var(--accent-dim);
 .duel-history-item .dh-champ{ color: var(--gold); }
 .duel-history-item .dh-reward{ margin-top:6px; font-size: 12px; color: var(--silver-dim); }
 
+/* ---------- Casino ---------- */
+:root{
+  --neon-pink: #ff4fa3;
+  --neon-cyan: #4fe3ff;
+  --neon-yellow: #ffe14f;
+  --neon-green: #4dffb0;
+  --roulette-red: #c23b4a;
+  --roulette-black: #1c1e26;
+}
+
+.casino-topbar{
+  display:flex; align-items:center; justify-content:center; gap: 16px; flex-wrap:wrap;
+  background: var(--panel); border:1px solid var(--border); border-radius: 16px;
+  padding: 16px 20px; max-width: 520px; margin: 0 auto 22px;
+}
+.casino-topbar select{
+  background: var(--panel-2); border:1px solid var(--border); border-radius:8px;
+  padding: 8px 12px; color: var(--silver-bright); font-family:'Rajdhani',sans-serif; font-weight:600; font-size:14px;
+}
+.casino-balance{
+  font-family:'JetBrains Mono', monospace; font-size: 20px; color: var(--neon-yellow);
+  text-shadow: 0 0 10px rgba(255,225,79,0.5);
+}
+
+.casino-tabs{ display:flex; justify-content:center; gap:8px; margin-bottom: 26px; flex-wrap:wrap; }
+.casino-tab-btn{
+  background: transparent; border:1px solid var(--border); color: var(--silver-dim);
+  font-family:'Rajdhani',sans-serif; font-weight:700; letter-spacing:1px; font-size:14px;
+  padding: 9px 20px; border-radius:999px; cursor:pointer; transition: all .15s ease;
+}
+.casino-tab-btn.active{ background: linear-gradient(120deg, var(--neon-pink), var(--neon-cyan)); color:#0b0d13; border-color:transparent; }
+.casino-tab-btn:hover{ color: var(--silver-bright); }
+
+.machine-grid{
+  display:grid; grid-template-columns: repeat(auto-fit, minmax(210px,1fr)); gap: 18px;
+  max-width: 760px; margin: 0 auto;
+}
+.machine-card{
+  background: radial-gradient(circle at 50% 0%, rgba(255,79,163,0.14), transparent 60%), var(--panel);
+  border: 1px solid var(--border); border-radius: 20px;
+  padding: 26px 18px; text-align:center; cursor:pointer;
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.machine-card:hover{ transform: translateY(-4px); border-color: var(--neon-pink); box-shadow: 0 12px 30px rgba(255,79,163,0.18); }
+.machine-emoji{ font-size: 46px; margin-bottom: 10px; filter: drop-shadow(0 0 14px rgba(255,225,79,0.35)); }
+.machine-name{ font-family:'Rajdhani',sans-serif; font-weight:700; font-size:18px; color: var(--silver-bright); letter-spacing:1px; }
+.machine-legendaries{ font-size: 11px; color: var(--silver-dim); margin-top:6px; }
+
+.slot-cabinet{
+  max-width: 420px; margin: 0 auto; border-radius: 26px; padding: 4px;
+  background: linear-gradient(160deg, var(--neon-pink), var(--neon-cyan), var(--neon-yellow));
+  box-shadow: 0 0 40px rgba(255,79,163,0.25);
+}
+.slot-cabinet-inner{
+  background: linear-gradient(180deg, #171a26 0%, #0d0f17 100%);
+  border-radius: 22px; padding: 22px 20px 26px; text-align:center;
+}
+.slot-marquee{ display:flex; justify-content:center; gap:7px; margin-bottom: 14px; }
+.slot-bulb{
+  width:9px; height:9px; border-radius:50%; background: var(--neon-yellow);
+  box-shadow: 0 0 8px var(--neon-yellow);
+  animation: bulbBlink 1.2s infinite ease-in-out;
+}
+.slot-bulb:nth-child(odd){ animation-delay: .15s; }
+.slot-bulb:nth-child(3n){ animation-delay: .3s; background: var(--neon-pink); box-shadow: 0 0 8px var(--neon-pink); }
+@keyframes bulbBlink{ 0%,100%{ opacity: .35; } 50%{ opacity: 1; } }
+
+.slot-title{ font-family:'Rajdhani',sans-serif; font-weight:700; font-size:19px; letter-spacing:2px; color: var(--silver-bright); margin-bottom: 4px; }
+.slot-sub{ font-size: 11px; color: var(--silver-dim); margin-bottom: 18px; letter-spacing:.5px; }
+
+.slot-screen{
+  background: #05060a; border-radius: 14px; padding: 18px 10px;
+  border: 2px solid var(--panel-2); box-shadow: inset 0 0 25px rgba(0,0,0,0.6);
+  display:flex; align-items:center; justify-content:center; gap: 10px;
+}
+.slot-reel{
+  width: 78px; height: 92px; border-radius: 10px;
+  background: linear-gradient(180deg, #1c2030, #10121b);
+  border: 1px solid var(--panel-2);
+  display:flex; align-items:center; justify-content:center;
+  font-size: 42px; line-height:1;
+  box-shadow: inset 0 0 12px rgba(0,0,0,0.7);
+}
+.slot-reel.spinning{ animation: reelBlur .09s linear infinite; }
+@keyframes reelBlur{ 0%{ filter: blur(0px); } 50%{ filter: blur(3px); transform: scale(1.05); } 100%{ filter: blur(0px); } }
+
+.slot-machine-row{ display:flex; align-items:center; justify-content:center; gap: 18px; margin-top: 18px; }
+.slot-lever-wrap{ display:flex; flex-direction:column; align-items:center; width: 46px; }
+.slot-lever-track{ width: 10px; height: 90px; background: var(--panel-2); border-radius: 6px; position:relative; }
+.slot-lever-ball{
+  position:absolute; left:50%; top: 0; transform: translateX(-50%);
+  width: 30px; height: 30px; border-radius:50%;
+  background: radial-gradient(circle at 35% 30%, #ff8fc4, var(--neon-pink));
+  box-shadow: 0 0 14px rgba(255,79,163,0.6);
+  cursor: pointer; transition: top .35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.slot-lever-ball.pulled{ top: 60px; }
+.slot-lever-label{ font-size: 10px; color: var(--silver-dim); margin-top:8px; letter-spacing:1px; text-align:center; }
+
+.slot-result{
+  margin-top: 18px; min-height: 26px; font-family:'Rajdhani',sans-serif; font-weight:700;
+  font-size: 15px; color: var(--silver-bright);
+}
+.slot-result.win{ color: var(--neon-yellow); text-shadow: 0 0 12px rgba(255,225,79,0.5); }
+.slot-result.lose{ color: var(--danger); }
+
+.slot-paytable{ margin-top: 18px; text-align:left; max-width: 320px; margin-left:auto; margin-right:auto; }
+.slot-paytable-item{ display:flex; justify-content:space-between; font-size: 11px; color: var(--silver-dim); padding: 3px 0; }
+.slot-paytable-item span:last-child{ color: var(--silver); }
+
+.jackpot-banner{
+  margin-top: 18px; padding: 16px; border-radius: 14px;
+  background: linear-gradient(120deg, rgba(255,225,79,0.12), rgba(255,79,163,0.12));
+  border: 1px solid var(--gold);
+}
+
+/* Roulette */
+.roulette-wrap{ display:flex; flex-direction:column; align-items:center; gap: 22px; }
+.roulette-wheel-outer{ position:relative; width: 280px; height:280px; }
+.roulette-wheel{
+  width:100%; height:100%; border-radius:50%;
+  border: 4px solid #2a2f40;
+  box-shadow: 0 0 0 8px var(--bg-elev), 0 14px 34px rgba(0,0,0,0.5);
+  transition: transform 4.6s cubic-bezier(0.15, 0.85, 0.25, 1);
+  position:relative;
+}
+.roulette-number{
+  position:absolute; top:50%; left:50%;
+  font-family:'JetBrains Mono', monospace; font-weight:700; font-size: 10px;
+  color: var(--silver-bright);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  pointer-events:none;
+  line-height:1;
+}
+.roulette-ball-marker{
+  position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+  width:0; height:0; z-index:5;
+  border-left: 9px solid transparent; border-right: 9px solid transparent;
+  border-top: 16px solid var(--silver-bright);
+}
+.roulette-center{
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:44px; height:44px; border-radius:50%;
+  background: var(--bg-elev); border:2px solid var(--gold);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Rajdhani',sans-serif; font-weight:700; font-size: 12px; color: var(--gold);
+}
+
+.roulette-table{
+  display:grid; grid-template-columns: repeat(6, 1fr); gap: 4px;
+  max-width: 460px; margin: 0 auto;
+}
+.roulette-cell{
+  aspect-ratio: 1; border-radius: 8px; display:flex; align-items:center; justify-content:center;
+  font-family:'JetBrains Mono', monospace; font-weight:700; font-size: 13px; color: var(--silver-bright);
+  cursor:pointer; border: 2px solid transparent; transition: all .12s ease;
+}
+.roulette-cell.red{ background: var(--roulette-red); }
+.roulette-cell.black{ background: var(--roulette-black); }
+.roulette-cell.green{ background: #2e8b57; grid-column: span 6; }
+.roulette-cell.selected{ border-color: var(--neon-yellow); transform: scale(1.08); box-shadow: 0 0 12px rgba(255,225,79,0.5); }
+.roulette-cell:hover{ filter: brightness(1.2); }
+
+.roulette-color-row{ display:flex; gap: 10px; justify-content:center; max-width:460px; margin: 0 auto; }
+.roulette-color-btn{
+  flex:1; padding: 12px; border-radius: 10px; text-align:center; cursor:pointer;
+  font-family:'Rajdhani',sans-serif; font-weight:700; letter-spacing:1px; font-size: 13px; color: var(--silver-bright);
+  border: 2px solid transparent; transition: all .12s ease;
+}
+.roulette-color-btn.red{ background: var(--roulette-red); }
+.roulette-color-btn.black{ background: var(--roulette-black); }
+.roulette-color-btn.green{ background: #2e8b57; }
+.roulette-color-btn.selected{ border-color: var(--neon-yellow); transform: scale(1.04); box-shadow: 0 0 12px rgba(255,225,79,0.5); }
+
+.bet-panel{
+  background: var(--panel); border:1px solid var(--border); border-radius:16px;
+  padding: 18px 20px; max-width: 380px; margin: 0 auto; text-align:center;
+}
+.bet-amount-row{ display:flex; align-items:center; justify-content:center; gap:10px; margin: 12px 0; }
+.bet-amount-row input{
+  width: 100px; text-align:center; background: var(--panel-2); border:1px solid var(--border); border-radius:8px;
+  padding: 8px; color: var(--silver-bright); font-family:'JetBrains Mono', monospace; font-size: 16px;
+}
+.chip-token{
+  display:inline-flex; align-items:center; justify-content:center;
+  width: 44px; height:44px; border-radius:50%; margin: 3px;
+  background: radial-gradient(circle at 35% 30%, #fff2b0, var(--neon-yellow));
+  color:#0b0d13; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor:pointer; border: 2px dashed rgba(0,0,0,0.2);
+  animation: chipPop .3s ease;
+}
+@keyframes chipPop{ 0%{ transform: scale(0); } 70%{ transform: scale(1.15); } 100%{ transform: scale(1); } }
+
 footer{
   text-align:center; color: var(--silver-dim); font-size: 11px; letter-spacing:1px; margin-top: 50px;
 }
+
 </style>
 </head>
 <body>
@@ -530,6 +724,7 @@ footer{
     <button class="nav-btn" data-nav="trade" onclick="go('trade')">Trade</button>
     <button class="nav-btn" data-nav="duel" onclick="go('duel')">Temporizador</button>
     <button class="nav-btn" data-nav="normas" onclick="go('normas')">Normas</button>
+    <button class="nav-btn" data-nav="casino" onclick="go('casino')">🎰 Casino</button>
   </nav>
 </header>
 
@@ -543,8 +738,8 @@ footer{
 const TRAINERS = ['iker','joel','alex'];
 const NAMES = { iker:'Iker', joel:'Joel', alex:'Alex' };
 
-const LOSER_PRIZES = ['1 captura extra', '1 Menta de Naturaleza', '1 Cápsula Habilidad', 'Banda Focus', 'Pesa Recia', 'Baya Meloc', 'Nada'];
-const WINNER_PRIZES = ['2 capturas extra', 'Cápsula Habilidad', 'Elegir entre 3 huevos', '2 Mentas de Naturaleza', '3 Caramelos Raros', 'Permiso para una ilegalidad'];
+const LOSER_PRIZES = ['1 captura extra', '1 Menta de Naturaleza', '5 tickets', '10 tickets', 'Banda Focus', 'Pesa Recia', 'Baya Meloc', 'Nada'];
+const WINNER_PRIZES = ['2 capturas extra', 'Elegir entre 3 huevos', '2 Mentas de Naturaleza', '10 tickets', '20 tickets', 'Permiso para una ilegalidad'];
 const WHEEL_COLORS = ['#9fb2da','#c9a86a','#c9cfdd','#7d97c9','#e0c68a','#b8bfd1','#8fa8d6','#d18aa0'];
 
 const SANCION_WHEEL = [
@@ -569,26 +764,55 @@ const MATCH1_LOSER_WHEEL = [
 ];
 
 let hearts = {}, teams = {}, history = [], tradesActive = [], tradesHistory = [];
+let tickets = {}, pendingPrizes = {};
 let normas = [];
 let sancionState = { offender: null, prize: null };
 let sancionWheelSpinning = false;
 let sancionWheelRotation = 0;
+
+/* ---------------- CASINO ---------------- */
+const SLOT_MACHINES = [
+  { id:'beasts',    name:'Bestias Legendarias',  emoji:'🐆', legendaries:['Raikou','Entei','Suicune'] },
+  { id:'guardians', name:'Guardianes de Johto',  emoji:'🕊️', legendaries:['Ho-Oh','Lugia'] },
+  { id:'time',      name:'Guardián del Tiempo',  emoji:'🌿', legendaries:['Celebi'] },
+  { id:'kanto',     name:'Aves de Kanto',        emoji:'🦅', legendaries:['Articuno','Zapdos','Moltres'] }
+];
+const SLOT_SPIN_COST = 5;
+const SLOT_FILLER_SYMBOLS = ['🍒','🔔','🍋','⭐'];
+// Tabla de probabilidades acumuladas de la tragaperras
+const SLOT_OUTCOMES = [
+  { type:'jackpot', symbol:'👑', chance:0.03, label:'¡JACKPOT! Legendario' },
+  { type:'egg',     symbol:'🥚', chance:0.08, label:'Huevo random' },
+  { type:'revive',  symbol:'❤️‍🩹', chance:0.12, label:'Revivir un Pokémon muerto a elegir' },
+  { type:'capture', symbol:'🎁', chance:0.15, label:'1 captura extra' },
+  { type:'curse',   symbol:'💀', chance:0.05, label:'Pierdes 2 tickets extra' },
+  { type:'nothing', symbol:null, chance:0.57, label:'Nada, sigue intentándolo' }
+];
+
+let casinoTab = 'slots'; // 'slots' | 'roulette'
+let casinoPlayer = TRAINERS[0];
+let casinoNeedsProfileSelect = true; // fuerza elegir perfil cada vez que se entra al casino
+let casinoMachine = null; // id de la máquina abierta, o null = grid de selección
+let slotSpinning = false;
+let slotReels = ['🍒','🔔','🍋'];
+let slotJackpotMachine = null; // si !=null, mostrar la mini-ruleta de legendarios de esa máquina
+let slotJackpotSpinning = false;
+let slotJackpotRotation = 0;
+
+const ROULETTE_WHEEL_ORDER = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+const ROULETTE_RED = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+function rouletteColorOf(n){ if(n===0) return 'green'; return ROULETTE_RED.has(n) ? 'red' : 'black'; }
+let rouletteSpinning = false;
+let rouletteRotation = 0;
+let rouletteBetType = null; // 'number' | 'color'
+let rouletteBetNumber = null;
+let rouletteBetColor = null;
+let rouletteBetAmount = 10;
+
 let duelState = { scheduled:null, picks:[], bye:null, match1:null, match1Winner:null, match1LoserPrize:null, finalWinner:null, finalWinnerPrize:null, finalLoserPrize:null };
 let duelHistory = [];
 let duelSpinning = false;
 let duelWheelRotation = 0;
-const SANCTION_WHEEL = [
-  'Pierde 5 vidas',
-  'Los otros dos eligen un Pokémon de tu equipo y lo liberas',
-  'Pierde 3 vidas',
-  'El combate se da por perdido y hay que repetirlo respetando el nivel máximo',
-  'Los otros dos eligen un Pokémon de tu equipo y lo mandan a la PC (no se puede usar hasta el final de la run)',
-  'Pierde 1 vida y el Pokémon infractor no puede subir de nivel hasta el próximo gimnasio',
-  'Perdón: no pasa nada, queda impune',
-  'Pierde 8 vidas y no puedes usar objetos curativos en el próximo combate de gimnasio'
-];
-let sanctionWheelSpinning = false;
-let sanctionWheelRotation = 0;
 
 let finalWheelSpinningWinner = false;
 let finalWheelSpinningLoser = false;
@@ -667,7 +891,7 @@ async function storeSet(key, val){
 
 async function loadAll(){
   const [profileResults, historyResult, tradesResult, duelResult, duelHistoryResult, normasResult, sancionResult] = await Promise.all([
-    Promise.all(TRAINERS.map(t => storeGet('profile:'+t, {hearts:20, team:[]}))),
+    Promise.all(TRAINERS.map(t => storeGet('profile:'+t, {hearts:20, team:[], tickets:0, pendingPrizes:[]}))),
     storeGet('history', []),
     storeGet('trades', {active:[], history:[]}),
     storeGet('duel', { scheduled:null, picks:[], bye:null, match1:null, match1Winner:null, match1LoserPrize:null, finalWinner:null, finalWinnerPrize:null, finalLoserPrize:null }),
@@ -678,6 +902,8 @@ async function loadAll(){
   TRAINERS.forEach((t, i) => {
     hearts[t] = profileResults[i].hearts;
     teams[t] = profileResults[i].team;
+    tickets[t] = profileResults[i].tickets || 0;
+    pendingPrizes[t] = profileResults[i].pendingPrizes || [];
   });
   history = historyResult;
   tradesActive = tradesResult.active;
@@ -689,7 +915,7 @@ async function loadAll(){
   loaded = true;
 }
 async function saveProfile(t){
-  return await storeSet('profile:'+t, { hearts: hearts[t], team: teams[t] });
+  return await storeSet('profile:'+t, { hearts: hearts[t], team: teams[t], tickets: tickets[t]||0, pendingPrizes: pendingPrizes[t]||[] });
 }
 async function saveTrades(){
   return await storeSet('trades', { active: tradesActive, history: tradesHistory });
@@ -767,9 +993,44 @@ function pushHistory(text){
   storeSet('history', history).then(ok=>{ if(!ok) queueRetry('history', ()=>storeSet('history', history)); });
 }
 
+async function addTickets(t, amount, reason){
+  tickets[t] = Math.max((tickets[t]||0) + amount, 0);
+  const sign = amount >= 0 ? '+' : '';
+  pushHistory(`🎟️ ${NAMES[t]} ${sign}${amount} tickets (${reason}) → ${tickets[t]} tickets en total`);
+  const ok = await saveProfile(t);
+  if(!ok) queueRetry('profile:'+t, ()=>saveProfile(t));
+}
+
+async function addPendingPrize(t, text, source){
+  pendingPrizes[t] = pendingPrizes[t] || [];
+  pendingPrizes[t].unshift({ id: crypto.randomUUID(), text, source, ts: Date.now() });
+  pushHistory(`🎁 ${NAMES[t]} tiene un premio pendiente de entregar: ${text} (${source})`);
+  const ok = await saveProfile(t);
+  if(!ok) queueRetry('profile:'+t, ()=>saveProfile(t));
+}
+
+async function removePendingPrize(t, id){
+  pendingPrizes[t] = (pendingPrizes[t]||[]).filter(p=>p.id!==id);
+  render();
+  const ok = await saveProfile(t);
+  if(!ok) queueRetry('profile:'+t, ()=>saveProfile(t));
+}
+
+// Aplica un premio de ruleta al ganador/perdedor: si es "N tickets" se suma solo al saldo,
+// si no, queda como premio físico pendiente de entregar en el perfil.
+async function applyPrizeToTrainer(t, prizeLabel, source){
+  const m = prizeLabel.match(/^(\d+)\s+tickets?$/i);
+  if(m){
+    await addTickets(t, parseInt(m[1], 10), source);
+  } else if(prizeLabel !== 'Nada'){
+    await addPendingPrize(t, prizeLabel, source);
+  }
+}
+
 function go(v, param){
   view = v;
   currentTrainer = param || null;
+  if(v === 'casino'){ casinoNeedsProfileSelect = true; }
   render();
 }
 
@@ -792,6 +1053,7 @@ function render(){
   if(view === 'trade') return renderTrade(app);
   if(view === 'duel') return renderDuel(app);
   if(view === 'normas') return renderNormas(app);
+  if(view === 'casino') return renderCasino(app);
 }
 
 function renderHome(app){
@@ -825,6 +1087,8 @@ function renderHome(app){
 function renderProfile(app, t){
   const h = hearts[t];
   const gems = Array.from({length:20}).map((_,i)=> i < Math.max(h,0));
+  const myTickets = tickets[t]||0;
+  const myPending = pendingPrizes[t]||[];
   app.innerHTML = `
     <button class="back-btn" onclick="go('home')">← volver</button>
     <div class="profile-header"><h2>${NAMES[t]}</h2></div>
@@ -837,9 +1101,28 @@ function renderProfile(app, t){
       <div class="action-row">
         <button class="danger-outline" onclick="loseLife('${t}')">💔 Perder vida</button>
         <button class="ghost" onclick="resetLives('${t}')">🔄 Restablecer</button>
-        <button class="ghost" onclick="openApplySanction('${t}')">⚖️ Aplicar sanción</button>
+        <button class="ghost" onclick="openApplySancion()">⚖️ Aplicar sanción</button>
       </div>
     </div>
+
+    <div class="hearts-panel" style="padding:18px 24px;">
+      <div class="mono" style="font-size:13px;color:var(--silver-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Saldo del casino</div>
+      <div class="big-count" style="font-size:32px;">🎟️ ${myTickets}<span style="font-size:15px;"> tickets</span></div>
+    </div>
+
+    <div class="section-label">🎁 Premios pendientes</div>
+    ${myPending.length===0 ? '<div class="empty-state" style="margin-top:14px;">No hay premios pendientes de entregar.</div>' : `
+    <div class="normas-list">
+      ${myPending.map(p=>`
+        <div class="norma-item">
+          <div class="n-text">${p.text}</div>
+          <div class="n-meta mono">${p.source} · ${fmtTime(p.ts)}</div>
+          <div style="text-align:right;">
+            <button class="danger-outline" onclick="removePendingPrize('${t}','${p.id}')">Eliminar (entregado)</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>`}
 
     <div class="section-label">Equipo principal</div>
     <div class="team-grid">
@@ -897,6 +1180,434 @@ function renderNormas(app){
     ${renderSancionSection()}
   `;
 }
+
+/* ================= CASINO ================= */
+function renderCasino(app){
+  app.innerHTML = `
+    <div class="casino-topbar">
+      <div>
+        <label style="font-size:11px;color:var(--silver-dim);letter-spacing:1px;display:block;margin-bottom:4px;">¿Quién juega?</label>
+        <select id="casino-player-select" onchange="setCasinoPlayer(this.value)">
+          ${TRAINERS.map(t=>`<option value="${t}" ${t===casinoPlayer?'selected':''}>${NAMES[t]}</option>`).join('')}
+        </select>
+      </div>
+      <div class="casino-balance">🎟️ ${tickets[casinoPlayer]||0}</div>
+    </div>
+
+    <div class="casino-tabs">
+      <button class="casino-tab-btn ${casinoTab==='slots'?'active':''}" onclick="setCasinoTab('slots')">🎰 Tragaperras</button>
+      <button class="casino-tab-btn ${casinoTab==='roulette'?'active':''}" onclick="setCasinoTab('roulette')">🎡 Ruleta</button>
+    </div>
+
+    <div id="casino-content">
+      ${casinoTab==='slots' ? renderSlotsTab() : renderRouletteTab()}
+    </div>
+  `;
+  if(casinoNeedsProfileSelect){
+    openCasinoProfileModal();
+  }
+}
+
+function openCasinoProfileModal(){
+  openModal(`
+    <h3>¿Quién va a jugar?</h3>
+    <div class="field" style="text-align:center;">
+      <div style="font-size:12px;color:var(--silver-dim);margin-bottom:14px;">Elige tu perfil antes de entrar al casino, para que no se mezclen los tickets de nadie.</div>
+      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+        ${TRAINERS.map(t=>`<button class="primary" onclick="confirmCasinoPlayer('${t}')">${NAMES[t]}</button>`).join('')}
+      </div>
+    </div>
+  `, false);
+}
+
+function confirmCasinoPlayer(t){
+  casinoPlayer = t;
+  casinoNeedsProfileSelect = false;
+  closeModal();
+  render();
+}
+
+function setCasinoPlayer(t){
+  casinoPlayer = t;
+  render();
+}
+function setCasinoTab(tab){
+  casinoTab = tab;
+  casinoMachine = null;
+  slotJackpotMachine = null;
+  render();
+}
+
+function renderSlotsTab(){
+  if(slotJackpotMachine){
+    return renderJackpotWheel();
+  }
+  if(casinoMachine){
+    return renderSlotMachine(casinoMachine);
+  }
+  return `
+    <div class="machine-grid">
+      ${SLOT_MACHINES.map(m=>`
+        <div class="machine-card" onclick="openSlotMachine('${m.id}')">
+          <div class="machine-emoji">${m.emoji}</div>
+          <div class="machine-name">${m.name}</div>
+          <div class="machine-legendaries">${m.legendaries.join(' · ')}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function openSlotMachine(id){
+  casinoMachine = id;
+  slotReels = ['🍒','🔔','🍋'];
+  render();
+}
+
+function renderSlotMachine(id){
+  const machine = SLOT_MACHINES.find(m=>m.id===id);
+  return `
+    <button class="back-btn" onclick="closeSlotMachine()">← volver a las máquinas</button>
+    <div class="slot-cabinet">
+      <div class="slot-cabinet-inner">
+        <div class="slot-marquee">${Array.from({length:9}).map(()=>`<div class="slot-bulb"></div>`).join('')}</div>
+        <div class="slot-title">${machine.emoji} ${machine.name.toUpperCase()}</div>
+        <div class="slot-sub">Jugando: ${NAMES[casinoPlayer]} · coste ${SLOT_SPIN_COST} tickets por tirada</div>
+
+        <div class="slot-machine-row">
+          <div class="slot-screen" id="slot-screen">
+            ${slotReels.map((s,i)=>`<div class="slot-reel ${slotSpinning?'spinning':''}" id="slot-reel-${i}">${s}</div>`).join('')}
+          </div>
+          <div class="slot-lever-wrap" onclick="pullLever('${id}')">
+            <div class="slot-lever-track">
+              <div class="slot-lever-ball ${slotSpinning?'pulled':''}" id="slot-lever-ball"></div>
+            </div>
+            <div class="slot-lever-label">TIRA<br>DE AQUÍ</div>
+          </div>
+        </div>
+
+        <div class="slot-result ${slotResultClass||''}" id="slot-result">${slotResultText||''}</div>
+
+        <div class="slot-paytable">
+          ${SLOT_OUTCOMES.filter(o=>o.symbol).map(o=>`<div class="slot-paytable-item"><span>${o.symbol}${o.symbol}${o.symbol}</span><span>${o.label}</span></div>`).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+let slotResultText = '';
+let slotResultClass = '';
+
+function closeSlotMachine(){
+  casinoMachine = null;
+  slotResultText = '';
+  slotResultClass = '';
+  render();
+}
+
+function pickWeighted(list){
+  const r = Math.random();
+  let acc = 0;
+  for(const item of list){
+    acc += item.chance;
+    if(r <= acc) return item;
+  }
+  return list[list.length-1];
+}
+
+async function pullLever(machineId){
+  if(slotSpinning) return;
+  if((tickets[casinoPlayer]||0) < SLOT_SPIN_COST){
+    slotResultText = `No tienes suficientes tickets (necesitas ${SLOT_SPIN_COST}).`;
+    slotResultClass = 'lose';
+    render();
+    return;
+  }
+  slotSpinning = true;
+  slotResultText = '';
+  slotResultClass = '';
+  render();
+
+  // Cobrar el coste de la tirada de inmediato
+  await addTickets(casinoPlayer, -SLOT_SPIN_COST, 'Tirada de tragaperras');
+
+  const outcome = pickWeighted(SLOT_OUTCOMES);
+
+  // Animación: cada carrete cambia de símbolo rápido y va parando en cascada
+  const finalSymbols = outcome.symbol
+    ? [outcome.symbol, outcome.symbol, outcome.symbol]
+    : [
+        SLOT_FILLER_SYMBOLS[Math.floor(Math.random()*SLOT_FILLER_SYMBOLS.length)],
+        SLOT_FILLER_SYMBOLS[Math.floor(Math.random()*SLOT_FILLER_SYMBOLS.length)],
+        SLOT_FILLER_SYMBOLS[Math.floor(Math.random()*SLOT_FILLER_SYMBOLS.length)]
+      ];
+  // Evitar que "nada" salga igual en los 3 por casualidad (para que se lea bien como "no premio")
+  if(!outcome.symbol && finalSymbols[0]===finalSymbols[1] && finalSymbols[1]===finalSymbols[2]){
+    finalSymbols[2] = SLOT_FILLER_SYMBOLS.find(s=>s!==finalSymbols[0]) || finalSymbols[2];
+  }
+
+  const allSymbols = [...SLOT_FILLER_SYMBOLS, '👑','🥚','❤️‍🩹','🎁','💀'];
+  const spinTimers = [];
+  [0,1,2].forEach((reelIdx)=>{
+    const timer = setInterval(()=>{
+      const el = document.getElementById(`slot-reel-${reelIdx}`);
+      if(el) el.textContent = allSymbols[Math.floor(Math.random()*allSymbols.length)];
+    }, 70);
+    spinTimers.push(timer);
+  });
+
+  const stopDelays = [900, 1500, 2100];
+  stopDelays.forEach((delay, reelIdx)=>{
+    setTimeout(()=>{
+      clearInterval(spinTimers[reelIdx]);
+      const el = document.getElementById(`slot-reel-${reelIdx}`);
+      if(el){ el.textContent = finalSymbols[reelIdx]; el.classList.remove('spinning'); }
+      slotReels[reelIdx] = finalSymbols[reelIdx];
+    }, delay);
+  });
+
+  setTimeout(async ()=>{
+    slotSpinning = false;
+
+    if(outcome.type === 'jackpot'){
+      slotResultText = `🎉 ¡JACKPOT! Gira la ruleta de legendarios de ${machineId ? SLOT_MACHINES.find(m=>m.id===machineId).name : ''}`;
+      slotResultClass = 'win';
+      render();
+      slotJackpotMachine = machineId;
+      slotJackpotRotation = 0;
+      render();
+    } else if(outcome.type === 'egg'){
+      slotResultText = '🥚 ¡Te llevas un huevo random!';
+      slotResultClass = 'win';
+      await addPendingPrize(casinoPlayer, 'Huevo random', 'Tragaperras · ' + SLOT_MACHINES.find(m=>m.id===machineId).name);
+      render();
+    } else if(outcome.type === 'revive'){
+      slotResultText = '❤️‍🩹 ¡Puedes revivir un Pokémon muerto a tu elección!';
+      slotResultClass = 'win';
+      await addPendingPrize(casinoPlayer, 'Revivir un Pokémon muerto a elegir', 'Tragaperras · ' + SLOT_MACHINES.find(m=>m.id===machineId).name);
+      render();
+    } else if(outcome.type === 'capture'){
+      slotResultText = '🎁 ¡1 captura extra!';
+      slotResultClass = 'win';
+      await addPendingPrize(casinoPlayer, '1 captura extra', 'Tragaperras · ' + SLOT_MACHINES.find(m=>m.id===machineId).name);
+      render();
+    } else if(outcome.type === 'curse'){
+      slotResultText = '💀 Mala suerte, pierdes 2 tickets extra.';
+      slotResultClass = 'lose';
+      await addTickets(casinoPlayer, -2, 'Mala suerte en la tragaperras');
+      render();
+    } else {
+      slotResultText = 'Sin premio esta vez. ¡Prueba otra vez!';
+      slotResultClass = '';
+      render();
+    }
+  }, 2400);
+}
+
+function renderJackpotWheel(){
+  const machine = SLOT_MACHINES.find(m=>m.id===slotJackpotMachine);
+  const legendaries = machine.legendaries;
+  const segAngle = 360/legendaries.length;
+  const stops = legendaries.map((l,i)=> `${WHEEL_COLORS[i%WHEEL_COLORS.length]} ${i*segAngle}deg ${(i+1)*segAngle}deg`).join(', ');
+  return `
+    <button class="back-btn" onclick="closeJackpotWheel()">← volver</button>
+    <div class="jackpot-banner">
+      <div style="text-align:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:18px;color:var(--gold);margin-bottom:14px;">🎉 ¡JACKPOT! Gira para saber tu legendario</div>
+      <div class="wheel-wrap">
+        <div class="wheel-outer">
+          <div class="wheel-pointer"></div>
+          <div class="wheel" id="jackpot-wheel" style="background: conic-gradient(${stops});">
+            ${legendaries.map((l,i)=>{
+              const angle = i*segAngle + segAngle/2;
+              const norm = ((angle % 360)+360)%360;
+              const flip = norm > 90 && norm < 270;
+              return `<div class="wheel-seg" style="transform: rotate(${angle}deg);"><span style="transform: translateX(-50%) ${flip?'rotate(180deg)':''};">${l}</span></div>`;
+            }).join('')}
+            <div class="wheel-center"></div>
+          </div>
+        </div>
+        <button class="primary" onclick="spinJackpotWheel()" ${slotJackpotSpinning?'disabled':''}>${slotJackpotSpinning?'Girando…':'Girar la rueda'}</button>
+      </div>
+    </div>
+  `;
+}
+
+function closeJackpotWheel(){
+  slotJackpotMachine = null;
+  slotResultText = '';
+  slotResultClass = '';
+  render();
+}
+
+function spinJackpotWheel(){
+  if(slotJackpotSpinning) return;
+  const machine = SLOT_MACHINES.find(m=>m.id===slotJackpotMachine);
+  const legendaries = machine.legendaries;
+  slotJackpotSpinning = true;
+  render();
+
+  const idx = Math.floor(Math.random()*legendaries.length);
+  const segAngle = 360/legendaries.length;
+  const center = idx*segAngle + segAngle/2;
+  const fullSpins = 5 + Math.floor(Math.random()*2);
+  const target = fullSpins*360 + (360-center);
+  slotJackpotRotation += target;
+
+  const wheelEl = document.getElementById('jackpot-wheel');
+  if(wheelEl){
+    wheelEl.style.transition = 'transform 4.2s cubic-bezier(0.15, 0.85, 0.25, 1)';
+    void wheelEl.offsetWidth;
+    wheelEl.style.transform = `rotate(${slotJackpotRotation}deg)`;
+  }
+
+  setTimeout(async ()=>{
+    slotJackpotSpinning = false;
+    const won = legendaries[idx];
+    await addPendingPrize(casinoPlayer, `Legendario: ${won}`, 'Jackpot tragaperras · ' + machine.name);
+    slotJackpotMachine = null;
+    casinoMachine = null;
+    slotResultText = '';
+    slotResultClass = '';
+    render();
+  }, 4300);
+}
+
+/* ---- Ruleta ---- */
+function renderRouletteTab(){
+  const numberCells = Array.from({length:37}, (_,n)=>n);
+  return `
+    <div class="roulette-wrap">
+      <div class="roulette-wheel-outer">
+        <div class="roulette-ball-marker"></div>
+        <div class="roulette-wheel" id="roulette-wheel" style="background: ${rouletteGradient()};">${rouletteNumbersHTML()}</div>
+        <div class="roulette-center">${rouletteLastResult!==null ? rouletteLastResult : '🎡'}</div>
+      </div>
+
+      <div class="bet-panel">
+        <div style="font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:1px;color:var(--silver-bright);">Apuesta de ${NAMES[casinoPlayer]}</div>
+        <div class="bet-amount-row">
+          <button class="ghost" onclick="adjustRouletteBet(-5)">−5</button>
+          <input type="number" id="roulette-bet-amount" value="${rouletteBetAmount}" min="1" onchange="rouletteBetAmount = parseInt(this.value)||1;">
+          <button class="ghost" onclick="adjustRouletteBet(5)">+5</button>
+        </div>
+        <div style="font-size:11px;color:var(--silver-dim);margin-bottom:10px;">Elige un color O un número (no ambos)</div>
+        <div class="roulette-color-row" style="margin-bottom:14px;">
+          <div class="roulette-color-btn red ${rouletteBetType==='color'&&rouletteBetColor==='red'?'selected':''}" onclick="selectRouletteColor('red')">ROJO ×2</div>
+          <div class="roulette-color-btn black ${rouletteBetType==='color'&&rouletteBetColor==='black'?'selected':''}" onclick="selectRouletteColor('black')">NEGRO ×2</div>
+          <div class="roulette-color-btn green ${rouletteBetType==='color'&&rouletteBetColor==='green'?'selected':''}" onclick="selectRouletteColor('green')">0 ×14</div>
+        </div>
+        <div class="roulette-table" style="margin-bottom:16px;">
+          ${numberCells.filter(n=>n>0).map(n=>`<div class="roulette-cell ${rouletteColorOf(n)} ${rouletteBetType==='number'&&rouletteBetNumber===n?'selected':''}" onclick="selectRouletteNumber(${n})">${n}</div>`).join('')}
+        </div>
+        <div style="font-size:11px;color:var(--silver-dim);margin-bottom:14px;">Acertar el número exacto paga ×35</div>
+        <button class="primary" onclick="spinRoulette()" ${rouletteSpinning?'disabled':''}>${rouletteSpinning?'Girando…':'Girar la ruleta'}</button>
+        <div class="slot-result ${rouletteResultClass||''}" style="margin-top:14px;">${rouletteResultText||''}</div>
+      </div>
+    </div>
+  `;
+}
+
+let rouletteLastResult = null;
+let rouletteResultText = '';
+let rouletteResultClass = '';
+
+function rouletteGradient(){
+  const segAngle = 360/ROULETTE_WHEEL_ORDER.length;
+  const stops = ROULETTE_WHEEL_ORDER.map((n,i)=>{
+    const c = rouletteColorOf(n);
+    const color = c==='green' ? '#2e8b57' : (c==='red' ? 'var(--roulette-red)' : 'var(--roulette-black)');
+    return `${color} ${i*segAngle}deg ${(i+1)*segAngle}deg`;
+  }).join(', ');
+  return `conic-gradient(${stops})`;
+}
+
+function rouletteNumbersHTML(){
+  const segAngle = 360/ROULETTE_WHEEL_ORDER.length;
+  const radius = 112; // distancia desde el centro, ajustada al radio de la rueda (280px)
+  return ROULETTE_WHEEL_ORDER.map((n,i)=>{
+    const angle = i*segAngle + segAngle/2;
+    return `<span class="roulette-number" style="transform: translate(-50%,-50%) rotate(${angle}deg) translateY(-${radius}px) rotate(${-angle}deg);">${n}</span>`;
+  }).join('');
+}
+
+function adjustRouletteBet(delta){
+  rouletteBetAmount = Math.max(1, rouletteBetAmount + delta);
+  render();
+}
+function selectRouletteColor(color){
+  rouletteBetType = 'color';
+  rouletteBetColor = color;
+  rouletteBetNumber = null;
+  render();
+}
+function selectRouletteNumber(n){
+  rouletteBetType = 'number';
+  rouletteBetNumber = n;
+  rouletteBetColor = null;
+  render();
+}
+
+async function spinRoulette(){
+  if(rouletteSpinning) return;
+  if(!rouletteBetType){
+    rouletteResultText = 'Elige un color o un número antes de girar.';
+    rouletteResultClass = 'lose';
+    render();
+    return;
+  }
+  if((tickets[casinoPlayer]||0) < rouletteBetAmount){
+    rouletteResultText = 'No tienes suficientes tickets para esa apuesta.';
+    rouletteResultClass = 'lose';
+    render();
+    return;
+  }
+
+  rouletteSpinning = true;
+  rouletteResultText = '';
+  rouletteResultClass = '';
+  render();
+
+  await addTickets(casinoPlayer, -rouletteBetAmount, 'Apuesta en la ruleta');
+
+  const winIdx = Math.floor(Math.random()*ROULETTE_WHEEL_ORDER.length);
+  const winNumber = ROULETTE_WHEEL_ORDER[winIdx];
+  const winColor = rouletteColorOf(winNumber);
+
+  const segAngle = 360/ROULETTE_WHEEL_ORDER.length;
+  const center = winIdx*segAngle + segAngle/2;
+  const fullSpins = 6 + Math.floor(Math.random()*2);
+  const target = fullSpins*360 + (360-center);
+  rouletteRotation += target;
+
+  const wheelEl = document.getElementById('roulette-wheel');
+  if(wheelEl){
+    wheelEl.style.transform = `rotate(${rouletteRotation}deg)`;
+  }
+
+  setTimeout(async ()=>{
+    rouletteSpinning = false;
+    rouletteLastResult = winNumber;
+
+    let payout = 0;
+    if(rouletteBetType === 'number' && rouletteBetNumber === winNumber){
+      payout = rouletteBetAmount * 35;
+    } else if(rouletteBetType === 'color' && rouletteBetColor === winColor){
+      payout = rouletteBetAmount * (winColor==='green' ? 14 : 2);
+    }
+
+    if(payout > 0){
+      rouletteResultText = `🎉 Salió el ${winNumber} (${winColor==='red'?'rojo':winColor==='black'?'negro':'verde'}) · ¡Ganas ${payout} tickets!`;
+      rouletteResultClass = 'win';
+      await addTickets(casinoPlayer, payout, 'Premio de la ruleta');
+    } else {
+      rouletteResultText = `Salió el ${winNumber} (${winColor==='red'?'rojo':winColor==='black'?'negro':'verde'}). No has acertado.`;
+      rouletteResultClass = 'lose';
+    }
+    render();
+  }, 4600);
+}
+
 
 function renderSancionSection(){
   if(!sancionState || !sancionState.offender){
@@ -1477,12 +2188,18 @@ async function setMatch1Winner(winner){
   render();
   const ok = await saveDuelState();
   if(!ok) queueRetry('duel', saveDuelState);
+  await addTickets(duelState.match1.p1, 5, 'Jugar el Combate 1');
+  await addTickets(duelState.match1.p2, 5, 'Jugar el Combate 1');
+  render();
 }
 async function setFinalWinner(winner){
   duelState.finalWinner = winner;
   render();
   const ok = await saveDuelState();
   if(!ok) queueRetry('duel', saveDuelState);
+  await addTickets(duelState.match1Winner, 5, 'Jugar la Final');
+  await addTickets(duelState.bye, 5, 'Jugar la Final');
+  render();
 }
 
 function spinFinalWheel(role){
@@ -1511,6 +2228,7 @@ function spinFinalWheel(role){
 
   setTimeout(async ()=>{
     const prize = prizes[idx];
+    const trainer = role==='winner' ? duelState.finalWinner : [duelState.match1Winner, duelState.bye].find(p=> p!==duelState.finalWinner);
     if(role==='winner'){
       finalWheelSpinningWinner = false;
       duelState.finalWinnerPrize = prize;
@@ -1521,6 +2239,8 @@ function spinFinalWheel(role){
     render();
     const ok = await saveDuelState();
     if(!ok) queueRetry('duel', saveDuelState);
+    await applyPrizeToTrainer(trainer, prize, role==='winner' ? 'Ruleta del ganador de la final' : 'Ruleta del perdedor de la final');
+    render();
   }, 4300);
 }
 
@@ -1633,72 +2353,20 @@ function attachAutocomplete(inputEl, dropdownEl, getList){
 }
 
 /* ---------------- MODALS ---------------- */
-function openModal(html){
+function openModal(html, closable){
+  if(closable === undefined) closable = true;
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.id = 'modal-overlay';
   overlay.innerHTML = `<div class="modal">${html}</div>`;
-  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closeModal(); });
+  if(closable){
+    overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closeModal(); });
+  }
   document.body.appendChild(overlay);
 }
 function closeModal(){
   const o = document.getElementById('modal-overlay');
   if(o) o.remove();
-}
-
-function openApplySanction(t){
-  const outcomes = SANCTION_WHEEL;
-  const segAngle = 360/outcomes.length;
-  const stops = outcomes.map((o,i)=> `${WHEEL_COLORS[i%WHEEL_COLORS.length]} ${i*segAngle}deg ${(i+1)*segAngle}deg`).join(', ');
-  sanctionWheelRotation = 0;
-  openModal(`
-    <h3>⚖️ Aplicar sanción · ${NAMES[t]}</h3>
-    <div class="wheel-wrap" id="sanction-wheel-wrap">
-      <div class="wheel-outer small">
-        <div class="wheel-pointer"></div>
-        <div class="wheel" id="sanction-wheel" style="background: conic-gradient(${stops});"><div class="wheel-center"></div></div>
-      </div>
-      <div class="prize-legend">
-        ${outcomes.map((o,i)=>`<div class="prize-legend-item"><span class="prize-swatch" style="background:${WHEEL_COLORS[i%WHEEL_COLORS.length]}"></span>${o}</div>`).join('')}
-      </div>
-      <button class="primary" id="sanction-spin-btn" onclick="spinSanctionWheel('${t}')">Girar la rueda</button>
-    </div>
-    <div class="modal-actions">
-      <button class="ghost" onclick="closeModal()">Cerrar</button>
-    </div>
-  `);
-}
-
-function spinSanctionWheel(t){
-  if(sanctionWheelSpinning) return;
-  const outcomes = SANCTION_WHEEL;
-  sanctionWheelSpinning = true;
-  const btn = document.getElementById('sanction-spin-btn');
-  if(btn){ btn.disabled = true; btn.textContent = 'Girando…'; }
-
-  const idx = Math.floor(Math.random()*outcomes.length);
-  const segAngle = 360/outcomes.length;
-  const center = idx*segAngle + segAngle/2;
-  const fullSpins = 5 + Math.floor(Math.random()*2);
-  const target = fullSpins*360 + (360 - center);
-  sanctionWheelRotation += target;
-
-  const wheelEl = document.getElementById('sanction-wheel');
-  if(wheelEl){
-    wheelEl.style.transition = 'transform 4.2s cubic-bezier(0.15, 0.85, 0.25, 1)';
-    void wheelEl.offsetWidth;
-    wheelEl.style.transform = `rotate(${sanctionWheelRotation}deg)`;
-  }
-
-  setTimeout(()=>{
-    sanctionWheelSpinning = false;
-    const outcome = outcomes[idx];
-    const wrap = document.getElementById('sanction-wheel-wrap');
-    if(wrap){
-      wrap.innerHTML = `<div class="prize-result">⚖️ ${outcome}</div>`;
-    }
-    pushHistory(`⚖️ ${NAMES[t]} cometió una infracción y le tocó: ${outcome}`);
-  }, 4300);
 }
 
 function openAddPoke(t){
