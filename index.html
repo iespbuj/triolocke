@@ -975,6 +975,60 @@ footer{
   text-align:center; color: var(--silver-dim); font-size: 11px; letter-spacing:1px; margin-top: 50px;
 }
 
+/* ---------- Settings FAB (sonido) ---------- */
+.settings-fab{
+  position: fixed; bottom: 16px; right: 16px; z-index: 500;
+  width: 42px; height: 42px; border-radius: 50%;
+  background: var(--panel-2); border: 1px solid var(--border);
+  color: var(--silver-dim); font-size: 18px;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+  transition: transform .15s ease, color .15s ease, border-color .15s ease;
+}
+.settings-fab:hover{ color: var(--silver-bright); border-color: var(--accent-dim); transform: rotate(35deg); }
+.settings-panel{
+  position: fixed; bottom: 66px; right: 16px; z-index: 500;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+  padding: 16px 18px; width: 220px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+  display: none;
+}
+.settings-panel.open{ display:block; }
+.settings-panel-title{
+  font-family:'Rajdhani',sans-serif; font-weight:700; letter-spacing:1px; font-size:13px;
+  color: var(--silver-bright); margin-bottom: 10px; text-transform:uppercase;
+}
+.settings-row{ display:flex; align-items:center; gap:10px; margin-bottom: 8px; }
+.settings-row input[type="range"]{
+  flex:1; accent-color: var(--accent);
+}
+.settings-mute-btn{
+  background:none; border:1px solid var(--border); color: var(--silver-dim);
+  border-radius:8px; width:30px; height:30px; cursor:pointer; font-size:14px;
+  display:flex; align-items:center; justify-content:center;
+}
+.settings-hint{ font-size: 10px; color: var(--silver-dim); line-height:1.4; }
+
+/* ---------- Confetti ---------- */
+#confetti-canvas{ position:fixed; inset:0; pointer-events:none; z-index: 999; }
+
+/* ---------- Medallas ---------- */
+.medal-badge{
+  position:absolute; top:-16px; left:50%; transform:translateX(-50%);
+  width: 34px; height:34px; border-radius:50%;
+  background: var(--bg-elev);
+  border: 2px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  font-size: 17px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.35);
+}
+.medal-badge.gold{ border-color:#d4af37; background: radial-gradient(circle, #3a3018 0%, var(--bg-elev) 70%); }
+.medal-badge.silver{ border-color:#c0c4cf; background: radial-gradient(circle, #2c2f38 0%, var(--bg-elev) 70%); }
+.medal-badge.bronze{ border-color:#cd7f32; background: radial-gradient(circle, #3a2818 0%, var(--bg-elev) 70%); }
+.combat-count{
+  font-size: 10px; letter-spacing: .5px; color: var(--silver-dim); margin-top: 2px;
+}
+
 </style>
 </head>
 <body>
@@ -998,7 +1052,361 @@ footer{
 
 <footer>hola soy un fracasado</footer>
 
+<canvas id="confetti-canvas"></canvas>
+
+<div class="settings-fab" id="settings-fab" onclick="toggleSettingsPanel()" title="Sonido">⚙️</div>
+<div class="settings-panel" id="settings-panel">
+  <div class="settings-panel-title">🔊 Sonido</div>
+  <div class="settings-row">
+    <button class="settings-mute-btn" id="mute-btn" onclick="toggleMute()">🔊</button>
+    <input type="range" id="volume-slider" min="0" max="100" value="60" oninput="setVolume(this.value)">
+  </div>
+  <div class="settings-hint">Controla el volumen de todos los efectos: tragaperras, ruleta, lotería y más.</div>
+</div>
+
 <script>
+/* ================================================================
+   SONIDO — motor sintetizado con Web Audio API (sin ficheros externos,
+   así funciona siempre, sin depender de enlaces rotos). Un único
+   volumen global controla TODOS los efectos de la web.
+   ================================================================ */
+let audioCtx = null;
+let masterGain = null;
+let masterComp = null;
+function ensureAudio(){
+  if(audioCtx) return;
+  try{
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterComp = audioCtx.createDynamicsCompressor();
+    masterComp.threshold.value = -18;
+    masterComp.knee.value = 24;
+    masterComp.ratio.value = 8;
+    masterComp.attack.value = 0.002;
+    masterComp.release.value = 0.15;
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = soundVolume;
+    masterGain.connect(masterComp);
+    masterComp.connect(audioCtx.destination);
+  }catch(e){ console.warn('Web Audio no disponible', e); }
+}
+let soundVolume = parseFloat(localStorage.getItem('triolocke_volume'));
+if(isNaN(soundVolume)) soundVolume = 0.6;
+let soundMuted = localStorage.getItem('triolocke_muted') === '1';
+
+function setVolume(v){
+  soundVolume = Math.max(0, Math.min(100, v)) / 100;
+  localStorage.setItem('triolocke_volume', soundVolume);
+  if(masterGain) masterGain.gain.value = soundMuted ? 0 : soundVolume;
+  if(soundVolume === 0) playSound('click');
+}
+function toggleMute(){
+  soundMuted = !soundMuted;
+  localStorage.setItem('triolocke_muted', soundMuted ? '1' : '0');
+  const btn = document.getElementById('mute-btn');
+  if(btn) btn.textContent = soundMuted ? '🔇' : '🔊';
+  if(masterGain) masterGain.gain.value = soundMuted ? 0 : soundVolume;
+  if(!soundMuted){ ensureAudio(); playSound('click'); }
+}
+function toggleSettingsPanel(){
+  ensureAudio();
+  if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  const p = document.getElementById('settings-panel');
+  p.classList.toggle('open');
+}
+document.addEventListener('click', (e)=>{
+  if(!e.target.closest('#settings-panel') && !e.target.closest('#settings-fab')){
+    const p = document.getElementById('settings-panel');
+    if(p) p.classList.remove('open');
+  }
+});
+
+/* ---- Bloques básicos para construir efectos con más cuerpo ---- */
+
+// Tono con envolvente natural (ataque rápido + caída exponencial) y bend de pitch opcional.
+// detune (en semitonos) permite grosor tipo "coro" si se llama dos veces muy cerca en frecuencia.
+function tone(freq, start, dur, type='sine', gainPeak=0.22, opts={}){
+  if(!audioCtx || soundMuted) return;
+  const t0 = audioCtx.currentTime + start;
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t0);
+  if(opts.bendTo){
+    osc.frequency.exponentialRampToValueAtTime(Math.max(20,opts.bendTo), t0 + (opts.bendTime||dur));
+  }
+  if(opts.detune) osc.detune.setValueAtTime(opts.detune, t0);
+  const attack = opts.attack !== undefined ? opts.attack : 0.012;
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(gainPeak, t0 + attack);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  let node = osc;
+  if(opts.lowpass){
+    const f = audioCtx.createBiquadFilter();
+    f.type='lowpass'; f.frequency.value = opts.lowpass;
+    osc.connect(f); node = f;
+  }
+  node.connect(g); g.connect(masterGain);
+  osc.start(t0);
+  osc.stop(t0 + dur + 0.08);
+}
+// Tono "grueso": dos osciladores ligeramente desafinados entre sí (chorus) + un tercero una
+// octava arriba muy suave (brillo). Suena mucho más lleno que un solo oscilador puro.
+function richTone(freq, start, dur, type='triangle', gainPeak=0.2, opts={}){
+  tone(freq, start, dur, type, gainPeak*0.62, {...opts, detune:-7});
+  tone(freq, start, dur, type, gainPeak*0.62, {...opts, detune:7});
+  tone(freq*2, start, dur*0.7, 'sine', gainPeak*0.22, opts);
+}
+// Campanita/moneda: ataque instantáneo tipo percusión + armónico agudo que se apaga rápido —
+// el timbre clásico de "cha-ching".
+function bell(freq, start, dur, gainPeak=0.18){
+  if(!audioCtx || soundMuted) return;
+  const t0 = audioCtx.currentTime + start;
+  [ [freq,1], [freq*2.01,0.5], [freq*3.0,0.22] ].forEach(([f,mult])=>{
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type='sine';
+    osc.frequency.setValueAtTime(f, t0);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(gainPeak*mult, t0+0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0+dur*mult);
+    osc.connect(g); g.connect(masterGain);
+    osc.start(t0); osc.stop(t0+dur+0.1);
+  });
+}
+// Ruido filtrado (para "clics" mecánicos, palanca, percusión de fichas)
+function noiseBurst(start, dur, gainPeak=0.15, freqCut=1800, type='lowpass'){
+  if(!audioCtx || soundMuted) return;
+  const bufferSize = Math.max(1, Math.floor(audioCtx.sampleRate * dur));
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for(let i=0;i<bufferSize;i++) data[i] = (Math.random()*2-1) * (1 - i/bufferSize);
+  const src = audioCtx.createBufferSource();
+  src.buffer = buffer;
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = type; filter.frequency.value = freqCut;
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(gainPeak, audioCtx.currentTime + start);
+  g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + start + dur);
+  src.connect(filter); filter.connect(g); g.connect(masterGain);
+  src.start(audioCtx.currentTime + start);
+}
+// Arpegio de campanitas ascendente/descendente — la base de los sonidos de victoria.
+function chime(freqs, start, gap, dur, gainPeak){
+  freqs.forEach((f,i)=> bell(f, start + i*gap, dur, gainPeak));
+}
+
+const SOUND_EFFECTS = {
+  click: ()=>{ tone(880, 0, 0.045, 'sine', 0.11, {attack:0.002}); noiseBurst(0, 0.02, 0.05, 5500); },
+  navigate: ()=>{ tone(440, 0, 0.09, 'sine', 0.11, {bendTo:660, attack:0.004}); },
+  lever: ()=>{
+    noiseBurst(0, 0.05, 0.22, 700, 'lowpass');
+    tone(140, 0, 0.22, 'square', 0.16, {bendTo:70, attack:0.003});
+    noiseBurst(0.16, 0.06, 0.14, 1200);
+  },
+  reelStop: ()=>{
+    noiseBurst(0, 0.045, 0.16, 2200);
+    tone(220, 0, 0.09, 'square', 0.13, {bendTo:110, attack:0.002});
+  },
+  spin: ()=>{
+    noiseBurst(0, 0.55, 0.09, 2400, 'bandpass');
+    for(let i=0;i<11;i++) tone(680 - i*20, i*0.045, 0.05, 'triangle', 0.05, {attack:0.003});
+  },
+  ballDrop: ()=>{
+    // clics que se aceleran y se apagan, como la bola de la ruleta perdiendo fuerza
+    const n = 16;
+    for(let i=0;i<n;i++){
+      const t = i<10 ? i*0.1 : 1.0 + (i-10)*0.045;
+      bell(1600 - i*40, t, 0.05, 0.10*(1-i/(n+4)));
+    }
+  },
+  coin: ()=>{ bell(1400, 0, 0.35, 0.20); bell(1866, 0.05, 0.4, 0.16); },
+  ticket: ()=>{ noiseBurst(0, 0.09, 0.13, 4200, 'highpass'); tone(1100, 0.02, 0.05, 'triangle', 0.10, {bendTo:1400}); },
+  win: ()=>{ chime([523,659,784,1047], 0, 0.1, 0.5, 0.20); },
+  bigwin: ()=>{
+    chime([392,523,659,784,988,1175], 0, 0.09, 0.55, 0.20);
+    chime([1568,1976], 0.55, 0.09, 0.4, 0.12);
+  },
+  jackpot: ()=>{
+    richTone(261, 0, 0.5, 'sawtooth', 0.14);
+    richTone(329, 0.12, 0.5, 'sawtooth', 0.14);
+    richTone(392, 0.24, 0.55, 'sawtooth', 0.15);
+    chime([523,659,784,1047,1319,1568,1976], 0.4, 0.1, 0.6, 0.20);
+    for(let i=0;i<8;i++) noiseBurst(i*0.1, 0.05, 0.06, 5000);
+  },
+  lose: ()=>{
+    tone(320, 0, 0.28, 'sawtooth', 0.15, {bendTo:200, attack:0.006, lowpass:900});
+    tone(230, 0.16, 0.35, 'sawtooth', 0.12, {bendTo:130, attack:0.006, lowpass:700});
+  },
+  curse: ()=>{
+    tone(300, 0, 0.16, 'square', 0.13, {bendTo:180, lowpass:1200});
+    tone(190, 0.12, 0.2, 'square', 0.12, {bendTo:110, lowpass:900});
+    tone(110, 0.26, 0.32, 'square', 0.11, {bendTo:60, lowpass:600});
+  },
+  heartbreak: ()=>{
+    tone(560, 0, 0.12, 'sine', 0.13, {attack:0.004});
+    tone(420, 0.1, 0.22, 'sine', 0.12, {bendTo:260, attack:0.004});
+  },
+  bonus: ()=>{ chime([659,880,1109,1318,1568], 0, 0.08, 0.4, 0.18); },
+  modal: ()=>{ tone(520, 0, 0.05, 'sine', 0.09, {bendTo:700, attack:0.002}); },
+  wheelLand: ()=>{
+    noiseBurst(0, 0.09, 0.17, 1400);
+    tone(220, 0, 0.15, 'triangle', 0.14, {bendTo:130, attack:0.003});
+    bell(1200, 0.02, 0.18, 0.10);
+  },
+};
+function playSound(name){
+  ensureAudio();
+  if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  const fn = SOUND_EFFECTS[name];
+  if(fn) fn();
+}
+// Sonido de clic ambiental para CUALQUIER botón/tarjeta/pestaña de la web,
+// así no hace falta cablear el sonido manualmente uno por uno.
+document.addEventListener('click', (e)=>{
+  const el = e.target.closest('button, .nav-btn, .profile-card, .logo, .poke-slot, .hall-card');
+  if(el && !el.classList.contains('settings-mute-btn')){
+    playSound(el.classList.contains('nav-btn') || el.classList.contains('logo') ? 'navigate' : 'click');
+  }
+}, true);
+
+/* ================================================================
+   CONFETI / PARTÍCULAS — canvas ligero, sin librerías externas
+   ================================================================ */
+let confettiParticles = [];
+let confettiRunning = false;
+function fireConfetti(opts={}){
+  const canvas = document.getElementById('confetti-canvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  const colors = opts.colors || ['#9fb2da','#c9a86a','#f1f3f8','#7d97c9','#e0c68a','#d18aa0'];
+  const count = opts.count || 140;
+  const originY = opts.originY || -20;
+  for(let i=0;i<count;i++){
+    confettiParticles.push({
+      x: Math.random()*canvas.width,
+      y: originY - Math.random()*200,
+      vx: (Math.random()-0.5)*4,
+      vy: 2 + Math.random()*4,
+      size: 5 + Math.random()*6,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      rot: Math.random()*360,
+      vrot: (Math.random()-0.5)*12,
+      shape: Math.random() < 0.5 ? 'rect' : 'circle',
+      life: 0,
+      maxLife: 140 + Math.random()*60
+    });
+  }
+  if(!confettiRunning) runConfettiLoop();
+}
+function fireSparkle(x, y, opts={}){
+  // Ráfaga pequeña de partículas para efectos menores (ganar unos tickets, etc.)
+  const canvas = document.getElementById('confetti-canvas');
+  if(!canvas) return;
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  const colors = opts.colors || ['#f1f3f8','#c9a86a','#9fb2da'];
+  for(let i=0;i<24;i++){
+    const angle = Math.random()*Math.PI*2;
+    const speed = 2+Math.random()*3;
+    confettiParticles.push({
+      x, y,
+      vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed - 1,
+      size: 3+Math.random()*3,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      rot: Math.random()*360, vrot: (Math.random()-0.5)*10,
+      shape:'circle', life:0, maxLife: 50+Math.random()*30, gravity: 0.12
+    });
+  }
+  if(!confettiRunning) runConfettiLoop();
+}
+function runConfettiLoop(){
+  confettiRunning = true;
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  function step(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    confettiParticles.forEach(p=>{
+      p.vy += p.gravity !== undefined ? p.gravity : 0.08;
+      p.x += p.vx; p.y += p.vy; p.rot += p.vrot; p.life++;
+      const alpha = Math.max(0, 1 - p.life/p.maxLife);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle = p.color;
+      if(p.shape==='rect') ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*0.6);
+      else { ctx.beginPath(); ctx.arc(0,0,p.size/2,0,Math.PI*2); ctx.fill(); }
+      ctx.restore();
+    });
+    confettiParticles = confettiParticles.filter(p=> p.life < p.maxLife && p.y < canvas.height+40);
+    if(confettiParticles.length > 0){
+      requestAnimationFrame(step);
+    } else {
+      confettiRunning = false;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+    }
+  }
+  requestAnimationFrame(step);
+}
+
+/* ================================================================
+   FRASES DE REACCIÓN — al perder (mucho más frecuente) y al ganar
+   ================================================================ */
+const LOSE_REACTIONS = [
+  'Vaya… ni un Magikarp te habría fallado tanto.',
+  'Esto ha dolido más que un crítico de Explosión.',
+  'La suerte te ha mirado y se ha dado la vuelta.',
+  'Ni con un Pokéradar encontrarías premio hoy.',
+  'Ash lleva más ligas ganadas que tú tickets hoy.',
+  'Eso ha sido un fallo más certero que un Guillotina.',
+  'El azar te acaba de usar Machacar.',
+  'Se ha activado tu habilidad oculta: Mala Suerte.',
+  'Ni Rocket con toda su tecnología te habría hecho perder así.',
+  'Has sacado un Metapod: no hace nada, no gana nada.',
+  'Directo al Centro Pokémon a curar el orgullo.',
+  'Esto es más flojo que un Fideos ante un tipo Acero.',
+  'Ni Falla la Ilusión te habría salvado de eso.',
+  'Suerte crítica: cero. Como siempre.',
+  'Has fallado más que un Hipnosis de nivel 5.',
+  'Te ha esquivado el premio como un Voltorb ante Onix.',
+  'Bienvenido al club de "casi lo tengo", socio fundador.',
+  'Eso ha sido un Golpe Bajo… a tu autoestima.',
+  'Ni una Baya Zanama te cura de esta racha.',
+  'El casino te manda recuerdos y cero tickets.',
+  'Se te ha resistido más que un Legendario en la hierba alta.',
+  'Recuerda: perder también entrena el carácter. O eso dicen.',
+  'Has usado Rezo, pero nadie te escuchó.',
+  'Ni con un Encanto se te da la vuelta esta suerte.',
+  'Eso ha sido menos rentable que criar un Metapod para combate.',
+  'La ruleta se ríe de ti en un idioma que no entiendes.',
+  'Otra vez sin premio. Casi es tradición ya.',
+  'Has fallado el tiro con más estilo que suerte.',
+  'Ni Paranormal te iba a librar de este resultado.',
+  'El destino te ha dado la espalda, literalmente.',
+  'Eso ha sido tan flojo como un Snorlax en pleno sueño.',
+  'Sigue así y te hacen entrenador honorario de la mala suerte.',
+  'Un fracaso más digno de leyenda que un Legendario.',
+  'Ni el Profesor Oak sabría explicar esta racha.',
+  'Cero premio, cero gloria, mucho carisma perdiendo.',
+  'Has entrenado la paciencia más que la fortuna, eso seguro.',
+  'Ese resultado ha sido más amargo que una Baya Zreza.',
+  'La casa gana. Otra vez. Como siempre.',
+  'Ni con un Repel te libras de la mala suerte hoy.',
+  'Esto ya no es mala suerte, esto es una firma personal.'
+];
+const WIN_REACTIONS = [
+  '¡Un golpe crítico de la fortuna! ¡Enhorabuena!',
+  '¡Eso sí que ha sido un Hiperrayo de suerte!',
+  '¡La casa tiembla, acabas de ganar de verdad!',
+  '¡Suerte legendaria, como si hubieras usado un Encanto perfecto!',
+  '¡Vaya golpe! El casino no se lo esperaba.',
+  '¡Esto hay que celebrarlo con confeti de verdad!',
+  '¡Racha ganadora activada, aprovéchala!',
+  '¡La ruleta te ha sonreído esta vez, y con razón!',
+  '¡Premio mayor! Hoy eres la leyenda de la sala.',
+  '¡Eso ha sido un golpe maestro, para enmarcar!'
+];
+
 const TRAINERS = ['iker','joel','alex'];
 const NAMES = { iker:'Iker', joel:'Joel', alex:'Alex' };
 
@@ -1029,6 +1437,8 @@ const MATCH1_LOSER_WHEEL = [
 
 let hearts = {}, teams = {}, history = [], tradesActive = [], tradesHistory = [];
 let tickets = {}, pendingPrizes = {};
+let dailyBonusDate = {}; // último día (YYYY-MM-DD) en que cada entrenador reclamó su bonus diario
+const DAILY_BONUS_AMOUNT = 10;
 let normas = [];
 let sancionState = { offender: null, prize: null };
 let sancionWheelSpinning = false;
@@ -1044,14 +1454,14 @@ const SLOT_MACHINES = [
 const SLOT_SPIN_COST = 1;
 const SLOT_FILLER_SYMBOLS = ['🍒','🔔','🍋','⭐'];
 // Tabla de probabilidades de la tragaperras (deben sumar 1.0)
-// 5% legendario (jackpot), 70% nada, y el 25% restante repartido entre el resto de premios.
+// 10% legendario (jackpot), 50% nada, y el 40% restante repartido entre el resto de premios.
 const SLOT_OUTCOMES = [
-  { type:'jackpot', symbol:'👑', chance:0.05, label:'¡JACKPOT! Legendario' },
-  { type:'capture', symbol:'🎁', chance:0.07, label:'1 captura extra' },
-  { type:'egg',     symbol:'🥚', chance:0.08, label:'Huevo random' },
-  { type:'revive',  symbol:'❤️‍🩹', chance:0.06, label:'Revivir un Pokémon muerto a elegir' },
-  { type:'curse',   symbol:'💀', chance:0.04, label:'Pierdes 2 tickets extra' },
-  { type:'nothing', symbol:null, chance:0.70, label:'Nada, sigue intentándolo' }
+  { type:'jackpot', symbol:'👑', chance:0.10, label:'¡JACKPOT! Legendario' },
+  { type:'capture', symbol:'🎁', chance:0.12, label:'1 captura extra' },
+  { type:'egg',     symbol:'🥚', chance:0.12, label:'Huevo random' },
+  { type:'revive',  symbol:'❤️‍🩹', chance:0.10, label:'Revivir un Pokémon muerto a elegir' },
+  { type:'curse',   symbol:'💀', chance:0.06, label:'Pierdes 2 tickets extra' },
+  { type:'nothing', symbol:null, chance:0.50, label:'Nada, sigue intentándolo' }
 ];
 
 // Frases del Charizard crupier al entrar al casino — se elige una al azar cada vez
@@ -1233,7 +1643,7 @@ async function storeSet(key, val){
 
 async function loadAll(){
   const [profileResults, historyResult, tradesResult, duelResult, duelHistoryResult, normasResult, sancionResult, loteriaResult] = await Promise.all([
-    Promise.all(TRAINERS.map(t => storeGet('profile:'+t, {hearts:20, team:[], tickets:0, pendingPrizes:[]}))),
+    Promise.all(TRAINERS.map(t => storeGet('profile:'+t, {hearts:20, team:[], tickets:0, pendingPrizes:[], dailyBonusDate:null}))),
     storeGet('history', []),
     storeGet('trades', {active:[], history:[]}),
     storeGet('duel', { scheduled:null, picks:[], bye:null, match1:null, match1Winner:null, match1LoserPrize:null, finalWinner:null, finalWinnerPrize:null, finalLoserPrize:null }),
@@ -1247,6 +1657,7 @@ async function loadAll(){
     teams[t] = profileResults[i].team;
     tickets[t] = profileResults[i].tickets || 0;
     pendingPrizes[t] = profileResults[i].pendingPrizes || [];
+    dailyBonusDate[t] = profileResults[i].dailyBonusDate || null;
   });
   history = historyResult;
   tradesActive = tradesResult.active;
@@ -1259,7 +1670,22 @@ async function loadAll(){
   loaded = true;
 }
 async function saveProfile(t){
-  return await storeSet('profile:'+t, { hearts: hearts[t], team: teams[t], tickets: tickets[t]||0, pendingPrizes: pendingPrizes[t]||[] });
+  return await storeSet('profile:'+t, { hearts: hearts[t], team: teams[t], tickets: tickets[t]||0, pendingPrizes: pendingPrizes[t]||[], dailyBonusDate: dailyBonusDate[t]||null });
+}
+
+// Bonus diario: solo se concede la primera vez que ese entrenador entra a SU perfil cada día.
+async function checkDailyBonus(t){
+  const today = new Date().toISOString().slice(0,10);
+  if(dailyBonusDate[t] === today) return;
+  dailyBonusDate[t] = today;
+  tickets[t] = (tickets[t]||0) + DAILY_BONUS_AMOUNT;
+  pushHistory(`🎁 ${NAMES[t]} reclamó su bonus diario: +${DAILY_BONUS_AMOUNT} tickets`);
+  render();
+  toast(`🎁 ¡Bonus diario! +${DAILY_BONUS_AMOUNT} tickets para ${NAMES[t]}`);
+  playSound('bonus');
+  fireConfetti({ count: 90 });
+  const ok = await saveProfile(t);
+  if(!ok) queueRetry('profile:'+t, ()=>saveProfile(t));
 }
 async function saveTrades(){
   return await storeSet('trades', { active: tradesActive, history: tradesHistory });
@@ -1382,6 +1808,9 @@ function go(v, param){
     casinoFloor = true;
     casinoGreetingLine = CROUPIER_LINES[Math.floor(Math.random()*CROUPIER_LINES.length)];
   }
+  if(v === 'profile' && param){
+    checkDailyBonus(param);
+  }
   render();
 }
 
@@ -1407,21 +1836,40 @@ function render(){
   if(view === 'casino') return renderCasino(app);
 }
 
+// Combates ganados = veces que ha sido campeón final de un torneo (duelHistory).
+function combatWinsOf(t){
+  return duelHistory.filter(d=> d.champion === t).length;
+}
+// Ranking por medallas: primero combates ganados, y si hay empate, se desempata por vidas.
+function getMedalRanking(){
+  const ranked = [...TRAINERS].sort((a,b)=>{
+    const wa = combatWinsOf(a), wb = combatWinsOf(b);
+    if(wb !== wa) return wb - wa;
+    return hearts[b] - hearts[a];
+  });
+  const medalNames = ['gold','silver','bronze'];
+  const medalIcons = { gold:'🥇', silver:'🥈', bronze:'🥉' };
+  const rankOf = {};
+  ranked.forEach((t,i)=> rankOf[t] = { pos:i+1, medal: medalNames[i], icon: medalIcons[medalNames[i]] });
+  return rankOf;
+}
+
 function renderHome(app){
-  const ranked = [...TRAINERS].sort((a,b)=> hearts[b]-hearts[a]);
-  const rankOf = {}; ranked.forEach((t,i)=> rankOf[t]=i+1);
+  const rankOf = getMedalRanking();
 
   app.innerHTML = `
     <div class="podium">
       ${TRAINERS.map(t=>{
-        const r = rankOf[t];
+        const r = rankOf[t].pos;
         const h = hearts[t];
+        const wins = combatWinsOf(t);
         const teamCount = teams[t].length;
         return `
         <div class="profile-card rank-${r}" onclick="go('profile','${t}')">
-          <div class="rank-badge">${r}</div>
+          <div class="medal-badge ${rankOf[t].medal}">${rankOf[t].icon}</div>
           <div class="trainer-name">${NAMES[t]}</div>
           <div class="hearts-count ${h<0?'danger':''}">${h}<small>/20</small></div>
+          <div class="combat-count">🏆 ${wins} combate${wins===1?'':'s'} ganado${wins===1?'':'s'}</div>
           <div class="mini-team">
             ${Array.from({length:6}).map((_,i)=>{
               const p = teams[t][i];
@@ -1440,9 +1888,14 @@ function renderProfile(app, t){
   const gems = Array.from({length:20}).map((_,i)=> i < Math.max(h,0));
   const myTickets = tickets[t]||0;
   const myPending = pendingPrizes[t]||[];
+  const rankOf = getMedalRanking();
+  const wins = combatWinsOf(t);
   app.innerHTML = `
     <button class="back-btn" onclick="go('home')">← volver</button>
-    <div class="profile-header"><h2>${NAMES[t]}</h2></div>
+    <div class="profile-header">
+      <h2>${rankOf[t].icon} ${NAMES[t]}</h2>
+      <div class="combat-count">🏆 ${wins} combate${wins===1?'':'s'} ganado${wins===1?'':'s'}</div>
+    </div>
 
     <div class="hearts-panel">
       <div class="big-count ${h<0?'danger':''}">${h}<span> / 20 vidas</span></div>
@@ -1777,6 +2230,7 @@ async function pullLever(machineId){
   slotResultText = '';
   slotResultClass = '';
   render();
+  playSound('lever');
 
   // Cobrar el coste de la tirada de inmediato
   await addTickets(casinoPlayer, -SLOT_SPIN_COST, 'Tirada de tragaperras');
@@ -1819,6 +2273,7 @@ async function pullLever(machineId){
         el.classList.add('landed');
       }
       slotReels[reelIdx] = finalSymbols[reelIdx];
+      playSound('reelStop');
     }, delay);
   });
 
@@ -1828,40 +2283,50 @@ async function pullLever(machineId){
     const screenEl = document.getElementById('slot-screen');
 
     if(outcome.type === 'jackpot'){
-      slotResultText = `🎉 ¡JACKPOT! Gira la ruleta de legendarios de ${machineId ? SLOT_MACHINES.find(m=>m.id===machineId).name : ''}`;
+      slotResultText = `🎉 ¡JACKPOT! Gira la ruleta de legendarios de ${machineId ? SLOT_MACHINES.find(m=>m.id===machineId).name : ''} · ${pickLine(WIN_REACTIONS)}`;
       slotResultClass = 'win';
       if(cabinetEl) cabinetEl.classList.add('jackpot-shake');
+      playSound('jackpot');
+      fireConfetti({ count: 180 });
       render();
       slotJackpotMachine = machineId;
       slotJackpotRotation = 0;
       casinoModeLine = pickLine(JACKPOT_LINES);
       render();
     } else if(outcome.type === 'egg'){
-      slotResultText = '🥚 ¡Te llevas un huevo random!';
+      slotResultText = `🥚 ¡Te llevas un huevo random! ${pickLine(WIN_REACTIONS)}`;
       slotResultClass = 'win';
       if(screenEl) screenEl.classList.add('win-glow');
+      playSound('win');
+      fireConfetti({ count: 90 });
       await addPendingPrize(casinoPlayer, 'Huevo random', 'Tragaperras · ' + SLOT_MACHINES.find(m=>m.id===machineId).name);
       render();
     } else if(outcome.type === 'revive'){
-      slotResultText = '❤️‍🩹 ¡Puedes revivir un Pokémon muerto a tu elección!';
+      slotResultText = `❤️‍🩹 ¡Puedes revivir un Pokémon muerto a tu elección! ${pickLine(WIN_REACTIONS)}`;
       slotResultClass = 'win';
       if(screenEl) screenEl.classList.add('win-glow');
+      playSound('win');
+      fireConfetti({ count: 90 });
       await addPendingPrize(casinoPlayer, 'Revivir un Pokémon muerto a elegir', 'Tragaperras · ' + SLOT_MACHINES.find(m=>m.id===machineId).name);
       render();
     } else if(outcome.type === 'capture'){
-      slotResultText = '🎁 ¡1 captura extra!';
+      slotResultText = `🎁 ¡1 captura extra! ${pickLine(WIN_REACTIONS)}`;
       slotResultClass = 'win';
       if(screenEl) screenEl.classList.add('win-glow');
+      playSound('win');
+      fireConfetti({ count: 90 });
       await addPendingPrize(casinoPlayer, '1 captura extra', 'Tragaperras · ' + SLOT_MACHINES.find(m=>m.id===machineId).name);
       render();
     } else if(outcome.type === 'curse'){
-      slotResultText = '💀 Mala suerte, pierdes 2 tickets extra.';
+      slotResultText = `💀 Mala suerte, pierdes 2 tickets extra. ${pickLine(LOSE_REACTIONS)}`;
       slotResultClass = 'lose';
+      playSound('curse');
       await addTickets(casinoPlayer, -2, 'Mala suerte en la tragaperras');
       render();
     } else {
-      slotResultText = 'Sin premio esta vez. ¡Prueba otra vez!';
+      slotResultText = `Sin premio esta vez. ${pickLine(LOSE_REACTIONS)}`;
       slotResultClass = '';
+      playSound('lose');
       render();
     }
   }, 1000);
@@ -1915,6 +2380,7 @@ function spinJackpotWheel(){
   const fullSpins = 5 + Math.floor(Math.random()*2);
   const target = fullSpins*360 + (360-center);
   slotJackpotRotation += target;
+  playSound('spin');
 
   const wheelEl = document.getElementById('jackpot-wheel');
   if(wheelEl){
@@ -1926,6 +2392,8 @@ function spinJackpotWheel(){
   setTimeout(async ()=>{
     slotJackpotSpinning = false;
     const won = legendaries[idx];
+    playSound('bigwin');
+    fireConfetti({ count: 200 });
     await addPendingPrize(casinoPlayer, `Legendario: ${won}`, 'Jackpot tragaperras · ' + machine.name);
     slotJackpotMachine = null;
     casinoMachine = null;
@@ -2090,6 +2558,7 @@ async function spinRoulette(){
   rouletteResultText = '';
   rouletteResultClass = '';
   render();
+  playSound('spin');
 
   await addTickets(casinoPlayer, -total, 'Apuesta en la ruleta');
 
@@ -2136,14 +2605,18 @@ async function spinRoulette(){
       }
     });
 
+    playSound('ballDrop');
     const colorLabel = winColor==='red'?'rojo':winColor==='black'?'negro':'verde';
     if(totalPayout > 0){
-      rouletteResultText = `🎉 Salió el ${winNumber} (${colorLabel}) · Aciertos: ${winningLines.join(', ')} · ¡Ganas ${totalPayout} tickets en total!`;
+      rouletteResultText = `🎉 Salió el ${winNumber} (${colorLabel}) · Aciertos: ${winningLines.join(', ')} · ¡Ganas ${totalPayout} tickets en total! ${pickLine(WIN_REACTIONS)}`;
       rouletteResultClass = 'win';
+      playSound(totalPayout >= 100 ? 'bigwin' : 'win');
+      fireConfetti({ count: totalPayout >= 100 ? 180 : 100 });
       await addTickets(casinoPlayer, totalPayout, 'Premio de la ruleta');
     } else {
-      rouletteResultText = `Salió el ${winNumber} (${colorLabel}). Ninguna de tus apuestas ha acertado.`;
+      rouletteResultText = `Salió el ${winNumber} (${colorLabel}). Ninguna de tus apuestas ha acertado. ${pickLine(LOSE_REACTIONS)}`;
       rouletteResultClass = 'lose';
+      playSound('lose');
     }
     if(wheelEl) wheelEl.classList.remove('spinning-disc');
     render();
@@ -2234,6 +2707,7 @@ async function buyLotteryTicket(qty){
     return;
   }
   if(err) err.textContent = '';
+  playSound('ticket');
   await addTickets(casinoPlayer, -cost, `Compra de ${qty} boleto${qty===1?'':'s'} de lotería`);
   for(let i=0;i<qty;i++){
     loteria.entries.push({ id: crypto.randomUUID(), trainer: casinoPlayer, ts: Date.now() });
@@ -2274,6 +2748,7 @@ async function drawLoteria(){
 
   loteriaDrawing = true;
   render();
+  playSound('spin');
 
   const fullSpins = 6 + Math.floor(Math.random()*3); // 6, 7 u 8 vueltas completas
   const target = fullSpins*360 + (360-landAngle);
@@ -2295,6 +2770,8 @@ async function drawLoteria(){
     loteriaDrawing = false;
 
     pushHistory(`🎉 ${NAMES[winner]} ganó la lotería: ${amount} tickets (${totalEntries} boleto${totalEntries===1?'':'s'} en juego)`);
+    playSound('bigwin');
+    fireConfetti({ count: 200 });
     await addTickets(winner, amount, 'Premio de la lotería');
     render();
     const ok = await saveLoteria();
@@ -2378,6 +2855,7 @@ function spinSancionWheel(){
   const fullSpins = 5 + Math.floor(Math.random()*2);
   const target = fullSpins*360 + (360 - center);
   sancionWheelRotation += target;
+  playSound('spin');
 
   const wheelEl = document.getElementById('sancion-wheel');
   if(wheelEl){
@@ -2390,6 +2868,7 @@ function spinSancionWheel(){
     const outcome = outcomes[idx];
     sancionWheelSpinning = false;
     sancionState.prize = outcome.label;
+    playSound('wheelLand');
     render();
     const ok = await saveSancion();
     if(!ok) queueRetry('sancion', saveSancion);
@@ -2733,6 +3212,7 @@ function spinMatch1LoserWheel(){
   const fullSpins = 5 + Math.floor(Math.random()*2);
   const target = fullSpins*360 + (360 - center);
   match1LoserWheelRotation += target;
+  playSound('spin');
 
   const wheelEl = document.getElementById('match1-loser-wheel');
   if(wheelEl){
@@ -2745,6 +3225,7 @@ function spinMatch1LoserWheel(){
     const outcome = outcomes[idx];
     match1LoserWheelSpinning = false;
     duelState.match1LoserPrize = outcome.label;
+    playSound('wheelLand');
 
     const loser = [duelState.match1.p1, duelState.match1.p2].find(p=> p!==duelState.match1Winner);
     pushHistory(`💀 ${NAMES[loser]} perdió el Combate 1 y le tocó: ${outcome.label} (aplicar manualmente si corresponde)`);
@@ -2854,9 +3335,11 @@ function spinWheel(){
   // forzar reflow para que la transición se aplique
   void wheelEl.offsetWidth;
   wheelEl.style.transform = `rotate(${duelWheelRotation}deg)`;
+  playSound('spin');
 
   setTimeout(async ()=>{
     duelSpinning = false;
+    playSound('wheelLand');
     const picked = candidates[idx];
     duelState.picks = [...(duelState.picks||[]), picked];
     duelWheelRotation = 0; // la siguiente rueda tiene otro número de candidatos, debe arrancar limpia
@@ -2888,6 +3371,8 @@ async function setMatch1Winner(winner){
 async function setFinalWinner(winner){
   duelState.finalWinner = winner;
   render();
+  playSound('bigwin');
+  fireConfetti({ count: 220 });
   const ok = await saveDuelState();
   if(!ok) queueRetry('duel', saveDuelState);
   await addTickets(duelState.match1Winner, 5, 'Jugar la Final');
@@ -2918,6 +3403,7 @@ function spinFinalWheel(role){
     void wheelEl.offsetWidth;
     wheelEl.style.transform = `rotate(${role==='winner'?finalWheelRotationWinner:finalWheelRotationLoser}deg)`;
   }
+  playSound('spin');
 
   setTimeout(async ()=>{
     const prize = prizes[idx];
@@ -2929,6 +3415,7 @@ function spinFinalWheel(role){
       finalWheelSpinningLoser = false;
       duelState.finalLoserPrize = prize;
     }
+    playSound('wheelLand');
     render();
     const ok = await saveDuelState();
     if(!ok) queueRetry('duel', saveDuelState);
@@ -2973,6 +3460,7 @@ async function finishDuel(){
 async function loseLife(t){
   hearts[t] = Math.max(hearts[t]-1, -1);
   pushHistory(`💔 ${NAMES[t]} perdió una vida (${hearts[t]}/20)`);
+  playSound('heartbreak');
   render();
   const ok = await saveProfile(t);
   if(!ok){
@@ -3269,6 +3757,10 @@ async function deleteTradeRecord(id){
 
 /* ---------------- INIT + polling ---------------- */
 (async function init(){
+  const slider = document.getElementById('volume-slider');
+  if(slider) slider.value = Math.round(soundVolume*100);
+  const muteBtn = document.getElementById('mute-btn');
+  if(muteBtn) muteBtn.textContent = soundMuted ? '🔇' : '🔊';
   loadNameLists();
   await loadAll();
   render();
