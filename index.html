@@ -1673,7 +1673,19 @@ async function saveProfile(t){
   return await storeSet('profile:'+t, { hearts: hearts[t], team: teams[t], tickets: tickets[t]||0, pendingPrizes: pendingPrizes[t]||[], dailyBonusDate: dailyBonusDate[t]||null });
 }
 
-// Bonus diario: solo se concede la primera vez que ese entrenador entra a SU perfil cada día.
+const ROULETTE_LIFE_RISK = 0.05; // 5% de posibilidades de perder 1 vida automáticamente al girar una ruleta del casino
+async function rouletteLifeRiskCheck(t){
+  if(Math.random() >= ROULETTE_LIFE_RISK) return;
+  hearts[t] = Math.max(hearts[t]-1, -1);
+  pushHistory(`🎲💔 ${NAMES[t]} tuvo mala suerte en la ruleta y pierde 1 vida automáticamente (${hearts[t]}/20)`);
+  toast(`💔 ¡Mala suerte! ${NAMES[t]} pierde una vida en la ruleta (${hearts[t]}/20).`);
+  playSound('heartbreak');
+  render();
+  const ok = await saveProfile(t);
+  if(!ok) queueRetry('profile:'+t, ()=>saveProfile(t));
+}
+
+// Bonus diario: solo se concede la primera vez que ese entrenador entra al casino cada día.
 async function checkDailyBonus(t){
   const today = new Date().toISOString().slice(0,10);
   if(dailyBonusDate[t] === today) return;
@@ -1807,9 +1819,6 @@ function go(v, param){
     casinoNeedsProfileSelect = true;
     casinoFloor = true;
     casinoGreetingLine = CROUPIER_LINES[Math.floor(Math.random()*CROUPIER_LINES.length)];
-  }
-  if(v === 'profile' && param){
-    checkDailyBonus(param);
   }
   render();
 }
@@ -2132,11 +2141,13 @@ function confirmCasinoPlayer(t){
   casinoNeedsProfileSelect = false;
   closeModal();
   render();
+  checkDailyBonus(t);
 }
 
 function setCasinoPlayer(t){
   casinoPlayer = t;
   render();
+  checkDailyBonus(t);
 }
 
 function renderSlotsTab(){
@@ -2395,6 +2406,7 @@ function spinJackpotWheel(){
     playSound('bigwin');
     fireConfetti({ count: 200 });
     await addPendingPrize(casinoPlayer, `Legendario: ${won}`, 'Jackpot tragaperras · ' + machine.name);
+    await rouletteLifeRiskCheck(casinoPlayer);
     slotJackpotMachine = null;
     casinoMachine = null;
     slotResultText = '';
@@ -2620,6 +2632,7 @@ async function spinRoulette(){
     }
     if(wheelEl) wheelEl.classList.remove('spinning-disc');
     render();
+    await rouletteLifeRiskCheck(casinoPlayer);
   }, 3000);
 }
 function renderLoteriaTab(){
@@ -2774,6 +2787,7 @@ async function drawLoteria(){
     fireConfetti({ count: 200 });
     await addTickets(winner, amount, 'Premio de la lotería');
     render();
+    await rouletteLifeRiskCheck(casinoPlayer);
     const ok = await saveLoteria();
     if(!ok) queueRetry('loteria', saveLoteria);
   }, 4600);
