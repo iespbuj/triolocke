@@ -645,6 +645,37 @@ button.ghost:hover{ color:var(--silver-bright); border-color: var(--accent-dim);
 .duel-history-item .dh-champ{ color: var(--gold); font-weight:700; }
 .duel-history-item .dh-reward{ margin-top:6px; font-size: 12px; color: var(--silver-dim); }
 
+/* Rivalidades / cara a cara */
+.h2h-line{ font-size: 11px; color: var(--silver-dim); text-align:center; margin-top:8px; letter-spacing:.3px; }
+.rivalries-wrap{
+  display:flex; flex-direction:column; gap: 10px; margin: 0 auto 28px; max-width: 420px;
+}
+.rivalry-card{
+  background: var(--panel); border:1px solid var(--border); border-radius: 14px;
+  padding: 14px 16px; text-align:center;
+  animation: floatIn .4s ease both;
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.rivalry-card:hover{ transform: translateY(-2px); border-color: var(--accent-dim); }
+.rivalry-card.has-leader{ border-color: rgba(201,168,106,0.35); box-shadow: 0 0 16px rgba(201,168,106,0.08); }
+.rivalry-score{
+  display:flex; align-items:center; justify-content:center; gap: 12px;
+  font-family:'Rajdhani', sans-serif; font-weight:700; font-size: 15px; letter-spacing:.5px;
+  color: var(--silver); margin-bottom: 8px;
+}
+.rv-name{ min-width: 58px; transition: color .2s ease, text-shadow .2s ease; }
+.rv-name.rv-lead{ color: var(--gold); text-shadow: 0 0 10px rgba(201,168,106,0.4); }
+.rv-pill{
+  font-family:'JetBrains Mono', monospace; font-size: 14px;
+  background: var(--bg-elev); border:1px solid var(--border); border-radius: 999px;
+  padding: 4px 14px; color: var(--silver-bright);
+}
+.rivalry-tag{ font-size: 11px; letter-spacing:.4px; }
+.rivalry-tag.neutral{ color: var(--silver-dim); }
+.rivalry-tag.close{ color: #d18aa0; animation: sparkTwinkle 1.8s ease-in-out infinite; }
+.rivalry-tag.lead{ color: var(--gold); }
+.rivalry-kryptonite{ font-size: 11px; color: var(--silver-dim); margin-top: 5px; font-style: italic; }
+
 /* ---------- Casino ---------- */
 :root{
   --neon-pink: #ff4fa3;
@@ -1994,6 +2025,81 @@ function getMedalRanking(){
   return rankOf;
 }
 
+/* ================================================================
+   RIVALIDADES — cara a cara entre dos entrenadores, contando cada
+   combate individual (Combate 1 y Final) de cada torneo jugado.
+   ================================================================ */
+// Devuelve la lista de ganadores de todos los combates directos entre a y b,
+// del más reciente al más antiguo (duelHistory ya está ordenado así).
+function headToHeadMatches(a, b){
+  const winners = [];
+  duelHistory.forEach(d=>{
+    [d.match1, d.final].forEach(m=>{
+      if(!m || !m.winner) return;
+      if((m.p1===a && m.p2===b) || (m.p1===b && m.p2===a)) winners.push(m.winner);
+    });
+  });
+  return winners;
+}
+function headToHeadTally(a, b){
+  const winners = headToHeadMatches(a, b);
+  const wins = { [a]:0, [b]:0 };
+  winners.forEach(w=> wins[w]++);
+  return { wins, winners, total: winners.length };
+}
+// Racha actual dentro de ese cara a cara concreto (ganador de los últimos combates seguidos)
+function headToHeadStreak(winners){
+  if(winners.length === 0) return null;
+  const leader = winners[0];
+  let count = 0;
+  for(const w of winners){ if(w===leader) count++; else break; }
+  return count >= 2 ? { winner: leader, count } : null;
+}
+const TRAINER_PAIRS = [['iker','joel'], ['iker','alex'], ['joel','alex']].filter(([a,b])=> TRAINERS.includes(a) && TRAINERS.includes(b));
+
+function renderRivalryLine(a, b){
+  const { wins, total } = headToHeadTally(a, b);
+  if(total === 0) return `<div class="h2h-line">⚔️ Primer cara a cara entre ${NAMES[a]} y ${NAMES[b]}</div>`;
+  return `<div class="h2h-line">⚔️ Histórico: ${NAMES[a]} ${wins[a]} - ${wins[b]} ${NAMES[b]}</div>`;
+}
+
+function renderRivalriesCard(){
+  const rows = TRAINER_PAIRS.map(([a,b])=>{
+    const { wins, winners, total } = headToHeadTally(a, b);
+    const streak = headToHeadStreak(winners);
+    let tag = '';
+    if(total === 0){
+      tag = `<div class="rivalry-tag neutral">Todavía no se han enfrentado</div>`;
+    } else if(wins[a] === wins[b]){
+      tag = `<div class="rivalry-tag close">🔥 Muy reñido</div>`;
+    } else {
+      const leader = wins[a] > wins[b] ? a : b;
+      const diff = Math.abs(wins[a]-wins[b]);
+      tag = `<div class="rivalry-tag lead">👑 ${NAMES[leader]} domina${diff>=2?' claramente':''}</div>`;
+    }
+    const kryptonite = streak && streak.count >= 3
+      ? `<div class="rivalry-kryptonite">🐍 ${NAMES[streak.winner]} es la kryptonita de ${NAMES[[a,b].find(p=>p!==streak.winner)]} (${streak.count} seguidas)</div>`
+      : '';
+    const leaderName = total>0 ? (wins[a]>=wins[b] ? a : b) : null;
+    return `
+      <div class="rivalry-card ${total>0 && wins[a]!==wins[b] ? 'has-leader':''}">
+        <div class="rivalry-score">
+          <span class="rv-name ${leaderName===a?'rv-lead':''}">${NAMES[a]}</span>
+          <span class="rv-pill">${wins[a]} - ${wins[b]}</span>
+          <span class="rv-name ${leaderName===b?'rv-lead':''}">${NAMES[b]}</span>
+        </div>
+        ${tag}
+        ${kryptonite}
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="section-sub" style="text-align:center;margin-bottom:14px;">Rivalidades</div>
+    <div class="rivalries-wrap">${rows}</div>
+  `;
+}
+
 function renderHome(app){
   const rankOf = getMedalRanking();
 
@@ -3259,6 +3365,7 @@ function renderWheelAndBracket(){
           <div class="bracket-vs-sep">VS</div>
           <div class="bracket-player ${match1Winner===match1.p2?'winner':''} ${match1Winner?'locked':''}" ${match1Winner?'':`onclick="setMatch1Winner('${match1.p2}')"`}>${NAMES[match1.p2]}</div>
         </div>
+        ${renderRivalryLine(match1.p1, match1.p2)}
         <div class="bracket-bye">${NAMES[bye]} pasa directo a la final</div>
       </div>
 
@@ -3272,6 +3379,7 @@ function renderWheelAndBracket(){
           <div class="bracket-vs-sep">VS</div>
           <div class="bracket-player ${finalWinner===bye?'winner':''} ${finalWinner?'locked':''}" ${finalWinner?'':`onclick="setFinalWinner('${bye}')"`}>${NAMES[bye]}</div>
         </div>
+        ${renderRivalryLine(match1Winner, bye)}
       </div>` : ''}
     </div>
 
@@ -3399,6 +3507,9 @@ function renderDuelTallyAndHistory(){
         </div>
       `).join('')}
     </div>
+
+    ${renderRivalriesCard()}
+
     <div class="section-sub" style="text-align:center;margin-bottom:14px;">Historial de combates</div>
     ${duelHistory.length===0 ? '<div class="empty-state">Todavía no se ha jugado ningún combate.</div>' : duelHistory.map(d=>`
       <div class="duel-history-item">
